@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+try { dotenv.config(); } catch (_) {}
 
 /**
  * aiService.js — AI backend adapter (strategy selector)

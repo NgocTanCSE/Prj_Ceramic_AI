@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
-import sharp from 'sharp';
 import { Buffer } from 'buffer';
-dotenv.config();
+try { dotenv.config(); } catch (_) {}
 
 /**
  * cloudflareService.js — Bộ kết nối Cloudflare Workers AI (LLaMA) cho nền tảng Gốm Sứ Biên Hòa

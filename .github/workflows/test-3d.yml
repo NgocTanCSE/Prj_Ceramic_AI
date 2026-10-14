@@ -1,0 +1,35 @@
+name: 3D Algorithm Test Suite
+
+on:
+  push:
+    branches:
+      - khoaduc
+      - khoaDuc
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout khoaduc branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'FE/package-lock.json'
+
+      - name: Install Frontend dependencies
+        working-directory: FE
+        run: npm ci
+
+      - name: Install API dependencies
+        working-directory: API
+        run: npm install --no-package-lock
+
+      - name: Run 3D Algorithm Test Suite
+        run: node tools/test_3d_comprehensive.mjs
