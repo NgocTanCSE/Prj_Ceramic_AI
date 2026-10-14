@@ -18,8 +18,6 @@
  * Trả về một đối tượng gán thẳng vào response JSON của /api/ai/clean-and-deconstruct.
  */
 
-import sharp from 'sharp';
-
 const STUDIO_BG = { r: 248, g: 247, b: 244 };
 const ALPHA_THRESHOLD = 30;
 const COLOR_DIST_THRESHOLD = 30; // L1 distance — hẹt hơn 12 của thuật toán cũ để tránh "lem viền"
