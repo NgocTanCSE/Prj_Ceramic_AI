@@ -68,6 +68,7 @@ export default function StudioScreen() {
 
   const {
     modelType,
+    setModelType,
     glazeColor,
     glazeRoughness,
     glazeName,
@@ -85,7 +86,12 @@ export default function StudioScreen() {
     customLathePoints,
     customGlbUrl,
     selectedProduct,
+    setSelectedProduct,
     isAiDeconstructing,
+    brushColor,
+    brushSize,
+    paintAction,
+    setPaintAction,
   } = useDesign();
   const { showToast } = useToast();
   const { setActiveTab } = useNavigation();
@@ -108,6 +114,19 @@ export default function StudioScreen() {
   const textureCanvasRef = useRef(null);
   const textureMapRef = useRef(null);
   const handleTextureMapRef = useRef(null);
+
+  // ── 3D Surface Brush Painting Refs ──
+  const paintCanvasRef = useRef(null);
+  if (!paintCanvasRef.current && typeof document !== 'undefined') {
+    const c = document.createElement('canvas');
+    c.width = 1024;
+    c.height = 1024;
+    paintCanvasRef.current = c;
+  }
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const isPaintingRef = useRef(false);
+  const lastPaintPosRef = useRef(null);
 
   // Interaction refs
   const isDraggingRef = useRef(false);
@@ -157,6 +176,24 @@ export default function StudioScreen() {
   const activeElementRef = useRef(activeElement);
   useEffect(() => { activeElementRef.current = activeElement; }, [activeElement]);
 
+  const brushColorRef = useRef(brushColor || '#2A6B5C');
+  useEffect(() => { brushColorRef.current = brushColor || '#2A6B5C'; }, [brushColor]);
+
+  const brushSizeRef = useRef(brushSize || 12);
+  useEffect(() => { brushSizeRef.current = brushSize || 12; }, [brushSize]);
+
+  // Lưu snapshot vào undo stack trước mỗi nét vẽ
+  const saveUndoSnapshot = useCallback(() => {
+    if (!paintCanvasRef.current) return;
+    const ctx = paintCanvasRef.current.getContext('2d');
+    const snapshot = ctx.getImageData(0, 0, 1024, 1024);
+    undoStackRef.current.push(snapshot);
+    if (undoStackRef.current.length > 20) {
+      undoStackRef.current.shift();
+    }
+    redoStackRef.current = [];
+  }, []);
+
   // ── 1. Tạo & Cập nhật Texture men gốm + họa tiết siêu tốc (không rebuild mesh) ──
   const updateTextureFast = useCallback((currentPatTransform, currentTxtTransform) => {
     const canvas = createCeramicTextureCanvas({
@@ -171,6 +208,7 @@ export default function StudioScreen() {
       modelType,
       width: 1024,
       height: 1024,
+      paintCanvas: paintCanvasRef.current,
       onImageLoaded: () => {
         if (textureMapRef.current) {
           updateTextureFast(currentPatTransform, currentTxtTransform);
@@ -190,6 +228,41 @@ export default function StudioScreen() {
 
     return textureMapRef.current;
   }, [glazeColor, glazeName, modelType]);
+
+  // Lắng nghe hành động Hoàn tác, Làm lại, Xóa nét vẽ từ Bảng tạo tác
+  useEffect(() => {
+    if (!paintAction || !paintCanvasRef.current) return;
+    const ctx = paintCanvasRef.current.getContext('2d');
+
+    if (paintAction.type === 'undo') {
+      if (undoStackRef.current.length > 0) {
+        const currentImg = ctx.getImageData(0, 0, 1024, 1024);
+        redoStackRef.current.push(currentImg);
+        const prev = undoStackRef.current.pop();
+        ctx.putImageData(prev, 0, 0);
+        updateTextureFast();
+        showToast('Đã hoàn tác nét vẽ!');
+      } else {
+        showToast('Không còn nét vẽ nào để hoàn tác.');
+      }
+    } else if (paintAction.type === 'redo') {
+      if (redoStackRef.current.length > 0) {
+        const currentImg = ctx.getImageData(0, 0, 1024, 1024);
+        undoStackRef.current.push(currentImg);
+        const next = redoStackRef.current.pop();
+        ctx.putImageData(next, 0, 0);
+        updateTextureFast();
+        showToast('Đã làm lại nét vẽ!');
+      } else {
+        showToast('Không có nét vẽ nào để làm lại.');
+      }
+    } else if (paintAction.type === 'clear') {
+      saveUndoSnapshot();
+      ctx.clearRect(0, 0, 1024, 1024);
+      updateTextureFast();
+      showToast('Đã xóa toàn bộ nét vẽ cọ!');
+    }
+  }, [paintAction, saveUndoSnapshot, showToast, updateTextureFast]);
 
   // ── 2. Khởi tạo Three.js WebGL Scene & Viewport ──
   useEffect(() => {
@@ -291,9 +364,95 @@ export default function StudioScreen() {
     };
     animate();
 
-    // ── Mouse & Touch Orbit & Direct 3D Surface Drag Listeners ──
+    // ── Mouse & Touch Orbit, Direct 3D Surface Drag & Brush Painting Listeners ──
     const raycaster = new THREE.Raycaster();
     const mouseNDC = new THREE.Vector2();
+
+    // ── 3D Surface Brush Painting on Mesh Surface via UV coordinates ──
+    const paintStrokeOnMesh = (e, isStart = false) => {
+      if (!rendererRef.current || !cameraRef.current || !ceramicMeshRef.current || !paintCanvasRef.current) return false;
+      const canvasEl = rendererRef.current.domElement;
+      const rect = canvasEl.getBoundingClientRect();
+      const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+      const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+      if (clientX === undefined || clientY === undefined) return false;
+
+      mouseNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouseNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (rotationGroupRef.current) {
+        rotationGroupRef.current.updateMatrixWorld(true);
+      }
+
+      raycaster.setFromCamera(mouseNDC, cameraRef.current);
+      const intersects = raycaster.intersectObject(ceramicMeshRef.current, false);
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        const hit = intersects[0];
+        const uv = hit.uv;
+        const x = uv.x * 1024;
+        const y = (1.0 - uv.y) * 1024;
+        const ctx = paintCanvasRef.current.getContext('2d');
+
+        ctx.save();
+        const isEraser = interactionModeRef.current === 'eraser';
+        if (isEraser) {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.fillStyle = 'rgba(0,0,0,1)';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = brushColorRef.current;
+          ctx.fillStyle = brushColorRef.current;
+        }
+        ctx.lineWidth = brushSizeRef.current;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (isStart || !lastPaintPosRef.current) {
+          ctx.beginPath();
+          ctx.arc(x, y, brushSizeRef.current / 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(x - 1024, y, brushSizeRef.current / 2, 0, Math.PI * 2);
+          ctx.arc(x + 1024, y, brushSizeRef.current / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const dist = Math.hypot(x - lastPaintPosRef.current.x, y - lastPaintPosRef.current.y);
+          if (dist < 400) {
+            ctx.beginPath();
+            ctx.moveTo(lastPaintPosRef.current.x, lastPaintPosRef.current.y);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(lastPaintPosRef.current.x - 1024, lastPaintPosRef.current.y);
+            ctx.lineTo(x - 1024, y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(lastPaintPosRef.current.x + 1024, lastPaintPosRef.current.y);
+            ctx.lineTo(x + 1024, y);
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            ctx.arc(x, y, brushSizeRef.current / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        lastPaintPosRef.current = { x, y };
+        updateTextureFast();
+        return true;
+      }
+
+      if (isStart) {
+        lastPaintPosRef.current = null;
+      }
+      return false;
+    };
 
     const updateDecalFromPointer = (e, dragType, isMouseDownSnap = false) => {
       if (!rendererRef.current || !cameraRef.current || !ceramicMeshRef.current) return;
@@ -386,9 +545,26 @@ export default function StudioScreen() {
     };
 
     const handleMouseDown = (e) => {
+      const mode = interactionModeRef.current;
       const isAlt = e.altKey || isAltPressedRef.current;
-      const isDragPattern = interactionModeRef.current === 'drag-pattern';
-      const isDragText = interactionModeRef.current === 'drag-text';
+
+      if (mode === 'paint' || mode === 'eraser') {
+        saveUndoSnapshot();
+        isPaintingRef.current = true;
+        isDraggingRef.current = true;
+        autoRotateRef.current = false;
+        setIsRotating(false);
+        const painted = paintStrokeOnMesh(e, true);
+        if (painted) return;
+        if (e.button === 2 || isAlt) {
+          activeDragTypeRef.current = 'orbit';
+        }
+        previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      const isDragPattern = mode === 'drag-pattern';
+      const isDragText = mode === 'drag-text';
 
       let dragType = null;
       if (isDragText || (isAlt && activeElementRef.current === 'text')) {
@@ -415,6 +591,12 @@ export default function StudioScreen() {
 
     const handleMouseMove = (e) => {
       if (!isDraggingRef.current) return;
+      const mode = interactionModeRef.current;
+
+      if (isPaintingRef.current && (mode === 'paint' || mode === 'eraser')) {
+        paintStrokeOnMesh(e, false);
+        return;
+      }
 
       const dragType = activeDragTypeRef.current;
       if (dragType === 'pattern' || dragType === 'text') {
@@ -438,14 +620,28 @@ export default function StudioScreen() {
 
     const handleMouseUp = () => {
       isDraggingRef.current = false;
+      isPaintingRef.current = false;
+      lastPaintPosRef.current = null;
       activeDragTypeRef.current = null;
     };
 
     const handleTouchStart = (e) => {
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
-      const isDragPattern = interactionModeRef.current === 'drag-pattern';
-      const isDragText = interactionModeRef.current === 'drag-text';
+      const mode = interactionModeRef.current;
+
+      if (mode === 'paint' || mode === 'eraser') {
+        saveUndoSnapshot();
+        isPaintingRef.current = true;
+        isDraggingRef.current = true;
+        autoRotateRef.current = false;
+        setIsRotating(false);
+        paintStrokeOnMesh(touch, true);
+        return;
+      }
+
+      const isDragPattern = mode === 'drag-pattern';
+      const isDragText = mode === 'drag-text';
 
       let dragType = null;
       if (isDragText) {
@@ -468,6 +664,13 @@ export default function StudioScreen() {
     const handleTouchMove = (e) => {
       if (!isDraggingRef.current || e.touches.length !== 1) return;
       const touch = e.touches[0];
+      const mode = interactionModeRef.current;
+
+      if (isPaintingRef.current && (mode === 'paint' || mode === 'eraser')) {
+        paintStrokeOnMesh(touch, false);
+        return;
+      }
+
       const dragType = activeDragTypeRef.current;
 
       if (dragType === 'pattern' || dragType === 'text') {
@@ -490,6 +693,8 @@ export default function StudioScreen() {
 
     const handleTouchEnd = () => {
       isDraggingRef.current = false;
+      isPaintingRef.current = false;
+      lastPaintPosRef.current = null;
       activeDragTypeRef.current = null;
     };
 
@@ -879,42 +1084,67 @@ export default function StudioScreen() {
             </div>
           )}
 
-          {/* Top HUD Banner khi đang giữ Alt hoặc bật chế độ kéo hoa văn / chữ */}
-          {(isAltPressed || interactionMode === 'drag-pattern' || interactionMode === 'drag-text') && (
+          {/* Top HUD Banner khi đang vẽ cọ, tẩy, giữ Alt hoặc bật chế độ kéo hoa văn / chữ */}
+          {(interactionMode === 'paint' || interactionMode === 'eraser' || isAltPressed || interactionMode === 'drag-pattern' || interactionMode === 'drag-text') && (
             <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 bg-ceramic-charcoal/92 text-ceramic-paper px-4 py-2 rounded-2xl shadow-card backdrop-blur-md text-xs font-mono border border-ceramic-paper/10 animate-in fade-in duration-200">
               <span className="w-2.5 h-2.5 rounded-full bg-state-success animate-pulse flex-shrink-0" />
               <span className="font-semibold text-ceramic-paper">
-                {activeElement === 'text' || interactionMode === 'drag-text' ? '✍️ Di chuyển Chữ khắc' : '🎨 Di chuyển Hoa văn'}
+                {interactionMode === 'paint'
+                  ? `🎨 Cọ vẽ 3D (${brushSize}px)`
+                  : interactionMode === 'eraser'
+                  ? `🧹 Tẩy nét vẽ (${brushSize}px)`
+                  : activeElement === 'text' || interactionMode === 'drag-text'
+                  ? '✍️ Di chuyển Chữ khắc'
+                  : '🎨 Di chuyển Hoa văn'}
               </span>
               <span className="hidden sm:inline text-[11px] text-ceramic-paper/80 border-l border-ceramic-paper/20 pl-2.5">
-                Kéo chuột trên gốm để đặt vị trí (đáy mộc, lòng trong, miệng, thân)
+                {interactionMode === 'paint'
+                  ? 'Kéo chuột/chạm trực tiếp lên bề mặt gốm để vẽ nét men'
+                  : interactionMode === 'eraser'
+                  ? 'Kéo chuột lên nét vẽ để tẩy sạch'
+                  : 'Kéo chuột trên gốm để đặt vị trí (đáy mộc, lòng trong, miệng, thân)'}
               </span>
-              {pattern !== 'none' && customText?.trim() && (
+              {(interactionMode === 'paint' || interactionMode === 'eraser') ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    const next = (activeElement === 'pattern' && interactionMode !== 'drag-text') ? 'text' : 'pattern';
-                    setActiveElement(next);
-                    if (interactionMode !== 'orbit') {
-                      setInteractionMode(next === 'pattern' ? 'drag-pattern' : 'drag-text');
-                    }
-                  }}
-                  className="ml-1 px-2.5 py-1 bg-ceramic-paper/20 hover:bg-ceramic-paper/30 rounded-lg text-[10px] text-ceramic-paper transition-colors cursor-pointer font-semibold flex items-center gap-1"
-                  title="Chuyển đổi đối tượng di chuyển trên gốm"
+                  onClick={() => setInteractionMode('orbit')}
+                  className="ml-1 px-2.5 py-1 bg-ceramic-terracotta hover:bg-ceramic-terracotta/90 rounded-lg text-[10px] text-ceramic-paper transition-colors cursor-pointer font-semibold shadow-xs"
                 >
-                  <span>Đổi sang:</span>
-                  <span className="text-ceramic-terracotta font-bold">{activeElement === 'pattern' ? '✍️ Chữ' : '🎨 Hoa văn'}</span>
+                  Xong (Xoay 3D)
                 </button>
+              ) : (
+                pattern !== 'none' && customText?.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = (activeElement === 'pattern' && interactionMode !== 'drag-text') ? 'text' : 'pattern';
+                      setActiveElement(next);
+                      if (interactionMode !== 'orbit') {
+                        setInteractionMode(next === 'pattern' ? 'drag-pattern' : 'drag-text');
+                      }
+                    }}
+                    className="ml-1 px-2.5 py-1 bg-ceramic-paper/20 hover:bg-ceramic-paper/30 rounded-lg text-[10px] text-ceramic-paper transition-colors cursor-pointer font-semibold flex items-center gap-1"
+                    title="Chuyển đổi đối tượng di chuyển trên gốm"
+                  >
+                    <span>Đổi sang:</span>
+                    <span className="text-ceramic-terracotta font-bold">{activeElement === 'pattern' ? '✍️ Chữ' : '🎨 Hoa văn'}</span>
+                  </button>
+                )
               )}
             </div>
           )}
 
           <div
             ref={mountRef}
-            className={`absolute inset-0 w-full h-full ${isAltPressed || interactionMode === 'drag-pattern' || interactionMode === 'drag-text'
-              ? 'cursor-crosshair active:cursor-crosshair'
-              : 'cursor-grab active:cursor-grabbing'
-              }`}
+            className={`absolute inset-0 w-full h-full ${
+              interactionMode === 'paint'
+                ? 'cursor-crosshair'
+                : interactionMode === 'eraser'
+                ? 'cursor-cell'
+                : isAltPressed || interactionMode === 'drag-pattern' || interactionMode === 'drag-text'
+                ? 'cursor-crosshair active:cursor-crosshair'
+                : 'cursor-grab active:cursor-grabbing'
+            }`}
           />
 
           {/* Overlay: nếu chưa chọn sản phẩm từ Gallery/AI Creator */}
@@ -930,12 +1160,28 @@ export default function StudioScreen() {
                   </h4>
                   <p className="text-xs text-ceramic-slate font-body">
                     Hãy chọn một mẫu gốm từ Thư viện, tạo mới qua AI Creator,
-                    hoặc nhấn núới bên dưới để chuyển đến Thư viện mẫu.
+                    hoặc bắt đầu trực tiếp với mẫu Cốc Trụ chuẩn MOD.01.
                   </p>
                 </div>
-                <div className="flex gap-2 justify-center">
-                  <Button variant="primary" size="sm" onClick={() => setActiveTab('gallery')}>
-                    Chọn từ Thư viện
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedProduct({
+                        id: 'prod-standard-mug',
+                        name: 'Cốc Trụ Gốm Nam Bộ',
+                        type: 'mug',
+                        modelType: 'mug',
+                        price: 180000,
+                      });
+                      setModelType('mug');
+                    }}
+                  >
+                    ✦ Bắt đầu tạo tác ngay
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => setActiveTab('gallery')}>
+                    Thư viện mẫu
                   </Button>
                   <Button variant="secondary" size="sm" onClick={() => setActiveTab('ai-co-creator')}>
                     Tạo bởi AI

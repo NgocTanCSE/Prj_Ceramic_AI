@@ -54,7 +54,7 @@ function renderSceneFrontToRGBA(renderer, scene, size) {
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
     format: THREE.RGBAFormat,
-    encoding: THREE.sRGBEncoding,
+    colorSpace: THREE.SRGBColorSpace,
   });
   const cam = new THREE.OrthographicCamera(-1.6, 1.6, 1.6, -1.6, 0.1, 20);
   cam.position.set(0, 0.25, 3);

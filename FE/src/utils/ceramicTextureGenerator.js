@@ -225,10 +225,11 @@ export function createCeramicTextureCanvas({
   height = 1024,
   onImageLoaded = null,
   latheProfile = null,
+  paintCanvas = null,
 }) {
-  // Phase 3 perf: cache canvas for deterministic (non-async-image) configurations
-  const hasAsyncImage = !!patternImage;
-  if (!hasAsyncImage) {
+  // Phase 3 perf: cache canvas for deterministic (non-async-image/non-painted) configurations
+  const hasDynamicContent = !!patternImage || !!paintCanvas;
+  if (!hasDynamicContent) {
     const key = cacheKey({ glazeColor, glazeName, pattern, patternTransform, customText, textTransform, modelType, rimStyle, width, height, latheProfile });
     if (textureCanvasCache.has(key)) return textureCanvasCache.get(key);
   }
@@ -680,8 +681,13 @@ export function createCeramicTextureCanvas({
     drawPatternMotif(ctx, plSeamP, onImageLoaded);
   }
 
+  // Draw hand-painted brush layer on top of glaze & motifs
+  if (paintCanvas) {
+    ctx.drawImage(paintCanvas, 0, 0, width, height);
+  }
+
   // Phase 3 perf: memoize deterministic canvas
-  if (!hasAsyncImage) {
+  if (!hasDynamicContent) {
     const key = cacheKey({ glazeColor, glazeName, pattern, patternTransform, customText, textTransform, modelType, rimStyle, width, height, latheProfile });
     textureCanvasCache.set(key, canvas);
   }

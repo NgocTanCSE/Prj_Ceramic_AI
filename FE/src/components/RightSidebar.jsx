@@ -8,6 +8,8 @@ import { useDesign } from '../contexts/DesignContext';
 import { useCart } from '../contexts/CartContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
+import TactileSlider from '../ui/TactileSlider';
 import Button from '../ui/Button';
 
 /* ──────────────────────────────────────────────────────────
@@ -16,6 +18,7 @@ import Button from '../ui/Button';
    - Men gốm: Danh sách gọn chỉ có tiêu đề (không mô tả dài),
      kèm bảng màu đa sắc phong phú và color picker tự do.
    - Họa tiết & Chữ: Điều chỉnh vị trí, xoay, kích thước tự do.
+   - Vẽ cọ thủ công 3D: Cọ vẽ, tẩy, màu men, kích cỡ nét cọ.
    ────────────────────────────────────────────────────────── */
 
 const STANDARD_MODELS = [
@@ -24,6 +27,17 @@ const STANDARD_MODELS = [
   { id: 'bowl', name: 'Bát Thiền', code: 'MOD.03' },
   { id: 'plate', name: 'Đĩa Mộc', code: 'MOD.04' },
   { id: 'vase-narrow-neck', name: 'Bình Cổ Nhỏ', code: 'MOD.05' },
+];
+
+const BRUSH_PALETTE = [
+  { color: '#2A6B5C', name: 'Men Xanh Đồng Vert de Biên Hòa' },
+  { color: '#8C3B2B', name: 'Men Đá Đỏ (Đất nung)' },
+  { color: '#E3A83F', name: 'Men Vàng Hoàng Yến' },
+  { color: '#2E6238', name: 'Men Xanh Lục Ngà' },
+  { color: '#1F3A52', name: 'Men Chàm Lam Đại Dương' },
+  { color: '#C44D34', name: 'Men Chu Sa Cổ Điển' },
+  { color: '#E8E2D2', name: 'Men Trắng Tro Trấu' },
+  { color: '#22201D', name: 'Men Đen Mun Củi' },
 ];
 
 export default function RightSidebar({ onClose, onGetSnapshot }) {
@@ -55,6 +69,11 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
     setInteractionMode,
     activeElement,
     setActiveElement,
+    brushColor,
+    setBrushColor,
+    brushSize,
+    setBrushSize,
+    setPaintAction,
     currentPrice,
     selectedProduct,
     setSelectedProduct,
@@ -63,6 +82,7 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
   const { addItem, setSelectedIds } = useCart();
   const { setActiveTab } = useNavigation();
   const { showToast } = useToast();
+  const { isAuthenticated, openAuthModal, saveDesign } = useAuth();
 
   const shapeFileInputRef = useRef(null);
   const decalFileInputRef = useRef(null);
@@ -76,6 +96,7 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
   const [openSections, setOpenSections] = useState({
     glaze: true,
     pattern: true,
+    brush: true,
     inscription: true,
   });
 
@@ -96,8 +117,38 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
     setOpenSections({
       glaze: nextState,
       pattern: nextState,
+      brush: nextState,
       inscription: nextState,
     });
+  };
+
+  const handleSaveToProfile = () => {
+    let snapshot = null;
+    if (typeof onGetSnapshot === 'function') {
+      try {
+        snapshot = onGetSnapshot();
+      } catch (_) {}
+    }
+    if (!isAuthenticated) {
+      openAuthModal('login');
+      showToast('Vui lòng đăng nhập hoặc đăng ký để lưu thiết kế vào hồ sơ cá nhân!', 'info');
+      return;
+    }
+    saveDesign({
+      title: `${designName} (${glazeName})`,
+      modelType,
+      glazeColor,
+      glazeName,
+      glazeRoughness,
+      pattern,
+      patternImage,
+      patternTransform,
+      customText,
+      textTransform,
+      customLathePoints,
+      snapshot,
+    });
+    showToast('Đã lưu mẫu gốm 3D độc bản thành công vào hồ sơ cá nhân!', 'success');
   };
 
   const allModelOptions = useMemo(() => {
@@ -517,15 +568,13 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                   <span>ĐỘ BÓNG MEN:</span>
                   <span className="font-bold text-ceramic-charcoal">{roughnessLabel}</span>
                 </div>
-                <input
-                  type="range"
-                  min="0.05"
-                  max="0.55"
-                  step="0.05"
+                <TactileSlider
+                  min={0.05}
+                  max={0.55}
+                  step={0.05}
                   value={glazeRoughness}
-                  onChange={(e) => setGlazeRoughness(parseFloat(e.target.value))}
-                  className="w-full accent-ceramic-terracotta cursor-pointer"
-                  aria-label="Điều chỉnh độ bóng men"
+                  onChange={(val) => setGlazeRoughness(val)}
+                  ariaLabel="Điều chỉnh độ bóng men"
                 />
               </div>
             </div>
@@ -685,14 +734,13 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                     <span>Kích cỡ hoa văn:</span>
                     <strong className="text-ceramic-terracotta">{patternTransform?.scale ?? 1.0}×</strong>
                   </div>
-                  <input
-                    type="range"
-                    min="0.4"
-                    max="1.6"
-                    step="0.1"
+                  <TactileSlider
+                    min={0.4}
+                    max={1.6}
+                    step={0.1}
                     value={patternTransform?.scale ?? 1.0}
-                    onChange={(e) => setPatternTransform(prev => ({ ...prev, scale: parseFloat(e.target.value) }))}
-                    className="w-full accent-ceramic-terracotta cursor-pointer"
+                    onChange={(val) => setPatternTransform(prev => ({ ...prev, scale: val }))}
+                    ariaLabel="Kích cỡ hoa văn"
                   />
                   <div className="flex justify-center">
                     <button
@@ -705,6 +753,195 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* ── 3. Vẽ Bằng Cọ Lên Gốm 3D (Thủ công nghệ nhân) ── */}
+        <div className="border-b border-ceramic-border/60 pb-5">
+          <div className="w-full flex items-center justify-between text-xs font-mono text-ceramic-slate py-1">
+            <button
+              type="button"
+              onClick={() => toggleSection('brush')}
+              aria-expanded={openSections.brush}
+              className="flex items-center gap-1.5 text-left cursor-pointer group flex-1"
+            >
+              <span className={`w-1.5 h-1.5 transition-colors ${openSections.brush ? 'bg-ceramic-terracotta' : 'bg-ceramic-slate/50 group-hover:bg-ceramic-terracotta'}`} />
+              <span className="font-bold uppercase tracking-wide text-ceramic-charcoal text-xs">
+                Vẽ Bằng Cọ (3D)
+              </span>
+              {!openSections.brush && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-ceramic-paper border border-ceramic-border text-ceramic-terracotta font-mono font-medium ml-1">
+                  {interactionMode === 'paint' ? 'Đang vẽ' : interactionMode === 'eraser' ? 'Đang tẩy' : 'Xoay 3D'}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => toggleSection('brush')}
+              className={`w-5 h-5 rounded-lg border border-ceramic-border bg-ceramic-paper flex items-center justify-center transition-transform duration-200 hover:border-ceramic-terracotta cursor-pointer ${openSections.brush ? 'rotate-180 bg-ceramic-cream' : ''}`}
+              title={openSections.brush ? 'Thu gọn' : 'Xổ ra'}
+            >
+              <svg className="w-3 h-3 text-ceramic-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+
+          {openSections.brush && (
+            <div className="space-y-3 mt-2.5">
+              {/* Chọn chế độ thao tác: Xoay 3D / Cọ Vẽ / Tẩy */}
+              <div className="grid grid-cols-3 gap-1.5 bg-ceramic-paper p-1 rounded-xl border border-ceramic-border text-[11px] font-mono">
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('orbit')}
+                  className={`py-1.5 px-2 rounded-lg font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    interactionMode === 'orbit'
+                      ? 'bg-ceramic-terracotta text-ceramic-paper font-semibold shadow-paper'
+                      : 'text-ceramic-slate hover:text-ceramic-charcoal hover:bg-ceramic-cream/60'
+                  }`}
+                  title="Chế độ xoay quan sát 360 độ"
+                >
+                  <span>🔄</span>
+                  <span>Xoay 3D</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('paint')}
+                  className={`py-1.5 px-2 rounded-lg font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    interactionMode === 'paint'
+                      ? 'bg-ceramic-terracotta text-ceramic-paper font-semibold shadow-paper'
+                      : 'text-ceramic-slate hover:text-ceramic-charcoal hover:bg-ceramic-cream/60'
+                  }`}
+                  title="Vẽ trực tiếp lên mặt gốm 3D bằng cọ"
+                >
+                  <span>🎨</span>
+                  <span>Cọ Vẽ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('eraser')}
+                  className={`py-1.5 px-2 rounded-lg font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    interactionMode === 'eraser'
+                      ? 'bg-ceramic-terracotta text-ceramic-paper font-semibold shadow-paper'
+                      : 'text-ceramic-slate hover:text-ceramic-charcoal hover:bg-ceramic-cream/60'
+                  }`}
+                  title="Tẩy nét vẽ thủ công"
+                >
+                  <span>🧹</span>
+                  <span>Tẩy Nét</span>
+                </button>
+              </div>
+
+              {/* Bảng Màu Cọ Vẽ Truyền Thống */}
+              <div className="bg-ceramic-paper p-2.5 rounded-xl border border-ceramic-border space-y-2 shadow-paper">
+                <div className="flex items-center justify-between text-[11px] font-mono text-ceramic-slate">
+                  <span>MÀU NÉT CỌ:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded border border-ceramic-border inline-block shadow-xs" style={{ backgroundColor: brushColor }} />
+                    <span className="text-[10px] font-bold text-ceramic-charcoal font-mono uppercase">{brushColor}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1.5">
+                  {BRUSH_PALETTE.map((p) => {
+                    const isSelected = brushColor.toLowerCase() === p.color.toLowerCase();
+                    return (
+                      <button
+                        key={p.color}
+                        type="button"
+                        onClick={() => {
+                          setBrushColor(p.color);
+                          if (interactionMode !== 'paint') setInteractionMode('paint');
+                        }}
+                        title={p.name}
+                        className={`h-7 rounded-lg border transition-all cursor-pointer relative flex items-center justify-center ${
+                          isSelected ? 'ring-2 ring-ceramic-terracotta ring-offset-1 scale-105 z-10' : 'border-ceramic-charcoal/20 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: p.color }}
+                      >
+                        {isSelected && <span className="text-[10px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Color Picker tự chọn màu cọ */}
+                <div className="flex items-center gap-2 pt-1 border-t border-ceramic-border/50">
+                  <input
+                    type="color"
+                    value={brushColor}
+                    onChange={(e) => {
+                      setBrushColor(e.target.value);
+                      if (interactionMode !== 'paint') setInteractionMode('paint');
+                    }}
+                    className="w-6 h-6 p-0 rounded cursor-pointer bg-transparent"
+                    title="Chọn màu cọ tự do"
+                  />
+                  <span className="text-[10px] text-ceramic-slate font-mono">Bảng chọn màu tự do</span>
+                </div>
+              </div>
+
+              {/* Điều chỉnh độ dày nét cọ với preview */}
+              <div className="bg-ceramic-paper p-3 rounded-xl border border-ceramic-border space-y-2 shadow-paper">
+                <div className="flex items-center justify-between text-xs font-mono text-ceramic-slate">
+                  <span>NÉT CỌ:</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-ceramic-cream border border-ceramic-border flex items-center justify-center">
+                      <div
+                        className="rounded-full"
+                        style={{
+                          width: `${Math.max(3, Math.min(20, brushSize / 2))}px`,
+                          height: `${Math.max(3, Math.min(20, brushSize / 2))}px`,
+                          backgroundColor: brushColor,
+                        }}
+                      />
+                    </div>
+                    <span className="font-bold text-ceramic-charcoal">{brushSize}px</span>
+                  </div>
+                </div>
+
+                <TactileSlider
+                  min={2}
+                  max={48}
+                  step={1}
+                  value={brushSize}
+                  onChange={(val) => setBrushSize(val)}
+                  ariaLabel="Độ dày nét cọ vẽ"
+                />
+              </div>
+
+              {/* Nút Hoàn Tác / Làm Lại / Xóa Toàn Bộ Nét Vẽ */}
+              <div className="grid grid-cols-3 gap-1.5 text-[11px] font-mono">
+                <button
+                  type="button"
+                  onClick={() => setPaintAction({ type: 'undo', ts: Date.now() })}
+                  className="py-1.5 px-2 bg-ceramic-paper hover:bg-ceramic-cream border border-ceramic-border rounded-xl text-ceramic-charcoal transition-all shadow-paper cursor-pointer flex items-center justify-center gap-1 font-medium"
+                  title="Hoàn tác nét vẽ vừa tạo"
+                >
+                  <span>↶</span>
+                  <span>Hoàn tác</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaintAction({ type: 'redo', ts: Date.now() })}
+                  className="py-1.5 px-2 bg-ceramic-paper hover:bg-ceramic-cream border border-ceramic-border rounded-xl text-ceramic-charcoal transition-all shadow-paper cursor-pointer flex items-center justify-center gap-1 font-medium"
+                  title="Làm lại nét vẽ"
+                >
+                  <span>↷</span>
+                  <span>Làm lại</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaintAction({ type: 'clear', ts: Date.now() })}
+                  className="py-1.5 px-2 bg-ceramic-paper hover:bg-ceramic-cream border border-ceramic-border rounded-xl text-ceramic-slate hover:text-state-error transition-all shadow-paper cursor-pointer flex items-center justify-center gap-1 font-medium"
+                  title="Xóa toàn bộ nét vẽ cọ"
+                >
+                  <span>🗑</span>
+                  <span>Xóa hết</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -829,14 +1066,13 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                       <span>Cỡ chữ khắc:</span>
                       <strong className="text-ceramic-terracotta">{textTransform?.fontSize ?? 44}px</strong>
                     </div>
-                    <input
-                      type="range"
-                      min="24"
-                      max="64"
-                      step="2"
+                    <TactileSlider
+                      min={24}
+                      max={64}
+                      step={2}
                       value={textTransform?.fontSize ?? 44}
-                      onChange={(e) => setTextTransform(prev => ({ ...prev, fontSize: parseInt(e.target.value, 10) }))}
-                      className="w-full accent-ceramic-terracotta cursor-pointer"
+                      onChange={(val) => setTextTransform(prev => ({ ...prev, fontSize: Math.round(val) }))}
+                      ariaLabel="Cỡ chữ khắc"
                     />
                   </div>
 
@@ -856,14 +1092,13 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                             <span>Vị trí dọc (Y):</span>
                             <span>{textTransform?.yPercent ?? 82}%</span>
                           </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="1"
+                          <TactileSlider
+                            min={0}
+                            max={100}
+                            step={1}
                             value={textTransform?.yPercent ?? 82}
-                            onChange={(e) => setTextTransform(prev => ({ ...prev, yPercent: parseInt(e.target.value, 10) }))}
-                            className="w-full accent-ceramic-terracotta cursor-pointer"
+                            onChange={(val) => setTextTransform(prev => ({ ...prev, yPercent: Math.round(val) }))}
+                            ariaLabel="Vị trí dọc Y"
                           />
                         </div>
                         <div>
@@ -871,14 +1106,13 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
                             <span>Xoay quanh thân (X):</span>
                             <span>{textTransform?.rotationAngle ?? 0}°</span>
                           </div>
-                          <input
-                            type="range"
-                            min="-180"
-                            max="180"
-                            step="5"
+                          <TactileSlider
+                            min={-180}
+                            max={180}
+                            step={5}
                             value={textTransform?.rotationAngle ?? 0}
-                            onChange={(e) => setTextTransform(prev => ({ ...prev, rotationAngle: parseInt(e.target.value, 10) }))}
-                            className="w-full accent-ceramic-terracotta cursor-pointer"
+                            onChange={(val) => setTextTransform(prev => ({ ...prev, rotationAngle: Math.round(val) }))}
+                            ariaLabel="Xoay quanh thân X"
                           />
                         </div>
                       </div>
@@ -901,6 +1135,25 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
             {currentPrice.toLocaleString('vi-VN')}₫
           </span>
         </div>
+
+        {/* Nút Lưu Thiết Kế Vào Hồ Sơ Cá Nhân */}
+        <button
+          type="button"
+          onClick={handleSaveToProfile}
+          className="
+            w-full py-2.5 rounded-xl text-xs font-mono font-bold tracking-wide shadow-paper
+            bg-ceramic-paper border border-ceramic-border text-ceramic-charcoal
+            hover:border-ceramic-terracotta hover:text-ceramic-terracotta hover:bg-ceramic-cream/50
+            transition-all duration-200 active:scale-95 cursor-pointer
+            flex items-center justify-center gap-2
+          "
+          title="Lưu bản thiết kế 3D hiện tại vào tài khoản cá nhân"
+        >
+          <svg className="w-4 h-4 text-ceramic-terracotta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+          </svg>
+          <span>Lưu Thiết Kế Vào Hồ Sơ</span>
+        </button>
 
         <div className="grid grid-cols-2 gap-2">
           <Button

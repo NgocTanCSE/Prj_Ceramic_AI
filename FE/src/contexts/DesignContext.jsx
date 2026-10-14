@@ -71,10 +71,15 @@ export function DesignProvider({ children }) {
     placement: 'belly',  // 'belly' (thân trước) hoặc 'bottom' (chân mộc đáy)
   });
 
-  // ── Chế độ tương tác chuột: 'orbit' (xoay 3D), 'drag-pattern' (kéo hoa văn), 'drag-text' (kéo chữ) ──
+  // ── Chế độ tương tác chuột: 'orbit' (xoay 3D), 'paint' (vẽ cọ), 'eraser' (tẩy), 'drag-pattern', 'drag-text' ──
   const [interactionMode, setInteractionMode] = useState('orbit');
   // Đối tượng đang được chọn để di chuyển trên 3D: 'pattern' hoặc 'text'
   const [activeElement, setActiveElement] = useState('pattern');
+
+  // ── Hand-painted 3D Surface Brush State ──
+  const [brushColor, setBrushColor] = useState('#2A6B5C'); // Men xanh đồng
+  const [brushSize, setBrushSize] = useState(12); // Nét cọ: 2px - 48px
+  const [paintAction, setPaintAction] = useState(null); // { type: 'undo' | 'redo' | 'clear', ts: number }
 
   // ── Danh sách dáng phôi do người dùng tự thêm vào ──
   const [customShapes, setCustomShapes] = useState([]);
@@ -225,6 +230,13 @@ export function DesignProvider({ children }) {
       setInteractionMode,
       activeElement,
       setActiveElement,
+      // Brush painting
+      brushColor,
+      setBrushColor,
+      brushSize,
+      setBrushSize,
+      paintAction,
+      setPaintAction,
       // Convenience
       setGlazeById,
       setPatternById,
@@ -239,7 +251,7 @@ export function DesignProvider({ children }) {
       defaultPattern, defaultPatternImage, resetPatternToDefault,
       glazeColor, glazeName, glazeRoughness,
       pattern, patternImage, patternTransform, customText, textTransform, customLathePoints, customGlbUrl, customShapes, addCustomShape,
-      interactionMode, activeElement, setGlazeById, setPatternById, resetDesign, activeDesign, currentPrice, basePrice,
+      interactionMode, activeElement, brushColor, brushSize, paintAction, setGlazeById, setPatternById, resetDesign, activeDesign, currentPrice, basePrice,
     ]
   );
 
