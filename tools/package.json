@@ -2,5 +2,9 @@
   "name": "gom-viet-crawl-tools",
   "version": "1.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test:3d": "node test_3d_comprehensive.mjs",
+    "bench:3d": "node benchmark_3d.mjs"
+  }
 }
