@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useAuth } from '../contexts/AuthContext';
 import Badge from '../ui/Badge';
 
 /* ──────────────────────────────────────────────────────────
    Left Sidebar Navigation
-   Text-based editorial navigation, no icon library.
-   ── Replaces icon-driven sidebar with numbered, label-only
-      architecture appropriate for a craft atelier.
+   Text-based editorial navigation with Heritage & Auth.
    ────────────────────────────────────────────────────────── */
 
 const USER = {
@@ -21,6 +20,7 @@ const menuItems = [
   { id: 'gallery', label: 'Thư viện mẫu', desc: null, badge: null },
   { id: 'ai-creator', label: 'Phác thảo mẫu', desc: null, badge: null },
   { id: 'studio-3d', label: 'Xưởng tạo hình', desc: null, badge: null },
+  { id: 'heritage', label: 'Di sản & Video', desc: null, badge: 'Mới' },
 ];
 
 export default function LeftSidebar({
@@ -33,6 +33,7 @@ export default function LeftSidebar({
 }) {
   const { totalItems } = useCart();
   const { activeTab, setActiveTab } = useNavigation();
+  const { currentUser, isAuthenticated, openAuthModal } = useAuth();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const items = menuItems;
@@ -134,6 +135,14 @@ export default function LeftSidebar({
                           <path d="M8 2h8" />
                           <path d="M9 2v3c0 1.5-2 3-2 6 0 4 2.5 7 5 7s5-3 5-7c0-3-2-4.5-2-6V2" />
                           <path d="M7 21h10" />
+                        </svg>
+                      )}
+                      {item.id === 'heritage' && (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                          <path d="M6 6h10" />
+                          <path d="M6 10h10" />
+                          <polygon points="10 14 15 17 10 20 10 14" fill="currentColor" opacity="0.3" />
                         </svg>
                       )}
                     </span>
@@ -258,59 +267,81 @@ export default function LeftSidebar({
 
 
 
-          {/* User Avatar & Controls (Bánh răng & Ẩn Sidebar) */}
-          <div className="flex items-center justify-between gap-2 px-1 py-1">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="relative flex-shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-ceramic-terracotta text-ceramic-paper flex items-center justify-center font-editorial text-base font-bold shadow-paper">
-                  {USER.avatar}
+          {/* User Account / Login Profile Button */}
+          {isAuthenticated && currentUser ? (
+            <div
+              onClick={() => openAuthModal('profile')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openAuthModal('profile')}
+              className="flex items-center justify-between gap-2 p-2 rounded-xl bg-ceramic-paper/80 border border-ceramic-border hover:border-ceramic-terracotta hover:bg-ceramic-cream/50 transition-all cursor-pointer shadow-paper group"
+            >
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="relative flex-shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-ceramic-terracotta text-ceramic-paper flex items-center justify-center font-editorial text-sm font-bold shadow-paper">
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-ceramic-paper" />
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-state-success ring-2 ring-ceramic-paper" />
+                <div className="overflow-hidden">
+                  <div className="text-xs font-bold text-ceramic-charcoal truncate group-hover:text-ceramic-terracotta transition-colors">
+                    {currentUser.name}
+                  </div>
+                  <div className="text-[10px] text-ceramic-slate truncate">
+                    {currentUser.role}
+                  </div>
+                </div>
               </div>
-              <div className="overflow-hidden">
-                <div className="text-xs font-bold text-ceramic-charcoal truncate">
-                  {USER.name}
-                </div>
-                <div className="text-[10px] text-ceramic-slate truncate">
-                  {USER.role}
-                </div>
+
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSettingsModal(true);
+                  }}
+                  className="w-6 h-6 rounded-lg text-ceramic-slate hover:text-ceramic-charcoal flex items-center justify-center transition-colors cursor-pointer"
+                  title="Cài đặt"
+                >
+                  ⚙
+                </button>
               </div>
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-ceramic-paper border border-dashed border-ceramic-terracotta/70 hover:bg-ceramic-terracotta hover:text-ceramic-paper text-ceramic-terracotta transition-all cursor-pointer shadow-paper group text-xs font-mono"
+            >
+              <div className="flex items-center gap-2 font-medium">
+                <span>👤</span>
+                <span>Đăng nhập / Đăng ký</span>
+              </div>
+              <span className="text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+            </button>
+          )}
 
-            {/* Action buttons: Gear Settings & Collapse Sidebar */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Nút Bánh Răng */}
-              <button
-                type="button"
-                onClick={() => setShowSettingsModal(true)}
-                className="w-7 h-7 rounded-lg hover:bg-ceramic-paper text-ceramic-slate hover:text-ceramic-charcoal border border-transparent hover:border-ceramic-border flex items-center justify-center transition-all focus:outline-none"
-                title="Cài đặt xưởng"
-                aria-label="Cài đặt xưởng"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </button>
+          {/* Action buttons: Settings & Collapse Sidebar */}
+          <div className="flex items-center justify-between px-1">
+            <button
+              type="button"
+              onClick={() => setShowSettingsModal(true)}
+              className="text-[10px] font-mono text-ceramic-slate hover:text-ceramic-terracotta flex items-center gap-1 cursor-pointer"
+            >
+              <span>⚙</span>
+              <span>Cài đặt xưởng</span>
+            </button>
 
-              {/* Nút Ẩn Sidebar */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (setDesktopOpen) setDesktopOpen(false);
-                  if (setMobileOpen) setMobileOpen(false);
-                }}
-                className="w-7 h-7 rounded-lg hover:bg-ceramic-paper text-ceramic-slate hover:text-ceramic-charcoal border border-transparent hover:border-ceramic-border flex items-center justify-center transition-all focus:outline-none"
-                title="Ẩn thanh điều hướng"
-                aria-label="Ẩn thanh điều hướng"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <path d="M9 3v18" />
-                  <path d="m14 9-3 3 3 3" />
-                </svg>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (setDesktopOpen) setDesktopOpen(false);
+                if (setMobileOpen) setMobileOpen(false);
+              }}
+              className="text-[10px] font-mono text-ceramic-slate hover:text-ceramic-charcoal cursor-pointer"
+            >
+              Ẩn menu [←]
+            </button>
           </div>
         </div>
       </div>
