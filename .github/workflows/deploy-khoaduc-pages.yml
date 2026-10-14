@@ -35,8 +35,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'FE/package-lock.json'
 
-      - name: Install dependencies
+      - name: Install Frontend dependencies
         working-directory: FE
+        run: npm ci
+
+      - name: Install API dependencies for 3D tests
+        working-directory: API
         run: npm ci
 
       - name: Run 3D Algorithm Test Suite
