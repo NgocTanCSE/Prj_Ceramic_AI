@@ -11,9 +11,37 @@ export function parsePromptToConcept(queryText = '') {
   const text = (queryText || '').trim();
   const lower = text.toLowerCase();
 
+  // 0. Trích xuất chính xác số đo từ prompt người dùng (Ví dụ: "cao 50 cm", "50cm", "đường kính 18cm")
+  const heightRegex = /(?:cao|chiều cao|height|h\s*[:=]?)\s*(\d+(?:[.,]\d+)?)\s*(cm|centimet|m|mm)?/i;
+  const standaloneCmRegex = /(\d+(?:[.,]\d+)?)\s*(?:cm|centimet)\b/i;
+  let explicitHeight = null;
+  const hMatch = lower.match(heightRegex) || lower.match(standaloneCmRegex);
+  if (hMatch) {
+    let val = parseFloat(hMatch[1].replace(',', '.'));
+    const unit = (hMatch[2] || '').toLowerCase();
+    if (unit === 'm' || (unit === '' && lower.includes(`${hMatch[1]}m`))) {
+      val = val * 100;
+    } else if (unit === 'mm') {
+      val = val / 10;
+    }
+    if (val >= 3 && val <= 300) {
+      explicitHeight = Math.round(val);
+    }
+  }
+
+  const diameterRegex = /(?:đường kính|đk|rộng|thân rộng|bụng rộng|diameter|d\s*[:=]?)\s*(\d+(?:[.,]\d+)?)\s*(cm|centimet|m|mm)?/i;
+  let explicitDiameter = null;
+  const dMatch = lower.match(diameterRegex);
+  if (dMatch) {
+    let val = parseFloat(dMatch[1].replace(',', '.'));
+    if (val >= 2 && val <= 300) {
+      explicitDiameter = Math.round(val);
+    }
+  }
+
   let modelType = 'vase';
-  let dimensions = 'Cao 20cm × Đường kính bụng 13cm';
-  let title = 'Bình Gốm Nghệ Thuật Dáng Chuẩn';
+  let dimensions = explicitHeight ? `Cao ${explicitHeight}cm × Đường kính bụng 14cm` : 'Cao 20cm × Đường kính bụng 13cm';
+  let title = explicitHeight ? `Bình Gốm Nghệ Thuật Cao ${explicitHeight}cm` : 'Bình Gốm Nghệ Thuật Dáng Chuẩn';
   let lathePoints = null;
 
   // 1. Phân tích dáng hình học & quy cách tỷ lệ thực tế
@@ -162,21 +190,51 @@ export function parsePromptToConcept(queryText = '') {
 
   // 3. Phân tích hoa văn vẽ tay (word-boundary aware — tránh match 'cá' trong 'năm cánh')
   let pattern = 'none';
+  let customPattern = '';
   const wordBoundary = (w) => new RegExp(`(?<![\\p{L}])${w}(?![\\p{L}])`, 'u');
-  if (wordBoundary('đào').test(lower) || lower.includes('hoa đào') || lower.includes('blossom') || lower.includes('cành hoa')) pattern = 'hoa_dao';
-  else if (wordBoundary('sen').test(lower) || lower.includes('hoa sen')) pattern = 'sen_co';
-  else if (lower.includes('trống đồng') || wordBoundary('đông sơn').test(lower)) pattern = 'dong_son';
-  else if (wordBoundary('cá').test(lower) || lower.includes('cá chép') || wordBoundary('ngư').test(lower)) pattern = 'ca_chep';
-  else if (lower.includes('chấm bi') || wordBoundary('bi').test(lower)) pattern = 'cham_bi';
+  if (lower.includes('doraemon') || lower.includes('doremon')) {
+    pattern = 'doraemon';
+    customPattern = 'Họa tiết Doraemon (Vẽ men màu theo yêu cầu)';
+  } else if (wordBoundary('đào').test(lower) || lower.includes('hoa đào') || lower.includes('blossom') || lower.includes('cành hoa')) {
+    pattern = 'hoa_dao';
+  } else if (wordBoundary('sen').test(lower) || lower.includes('hoa sen')) {
+    pattern = 'sen_co';
+  } else if (lower.includes('trống đồng') || wordBoundary('đông sơn').test(lower)) {
+    pattern = 'dong_son';
+  } else if (wordBoundary('cúc').test(lower) || lower.includes('hoa cúc') || lower.includes('cúc dây')) {
+    pattern = 'cuc_day';
+  } else if (wordBoundary('cá').test(lower) || lower.includes('cá chép') || wordBoundary('ngư').test(lower)) {
+    pattern = 'ca_chep';
+  } else if (lower.includes('chấm bi') || wordBoundary('bi').test(lower)) {
+    pattern = 'cham_bi';
+  }
 
-  // 4. Đánh giá độ khả thi kỹ nghệ lò nung
+  // 4. Tính toán tham số hình học dựa trên thông số người dùng
+  const shapeParams = parsePromptToShapeParams(lower, modelType, explicitHeight, explicitDiameter);
+
+  // Nếu người dùng chỉ định chiều cao cụ thể (ví dụ: 50cm):
+  if (explicitHeight) {
+    dimensions = `Cao ${shapeParams.height}cm × Đường kính bụng ${Math.round(shapeParams.maxRadius * 2)}cm`;
+    // Tính toán lại lathePoints theo tỷ lệ kích thước thực
+    lathePoints = paramsToLathePoints({ archetype: modelType, ...shapeParams });
+  }
+
+  // 5. Đánh giá độ khả thi kỹ nghệ lò nung
+  const isLargeVessel = shapeParams.height > 40;
   const feasibility = {
-    score: 94,
-    verdict: 'Khả thi rất cao (Đã tối ưu xương đất và kết cấu chịu nhiệt lò rồng)',
-    clayRecommendation: 'Đất sét xám Tân Vạn dẻo mịn pha phù sa sông Đồng Nai',
+    score: isLargeVessel ? 88 : 94,
+    verdict: isLargeVessel
+      ? `Khả thi chế tác đặc biệt (Kích thước ${shapeParams.height}cm cần nung khoang giữa lò rồng)`
+      : 'Khả thi rất cao (Đã tối ưu xương đất và kết cấu chịu nhiệt lò rồng)',
+    clayRecommendation: isLargeVessel
+      ? 'Đất sét xám Tân Vạn gia cố quặng đá ong Bửu Long chịu lực vách cao'
+      : 'Đất sét xám Tân Vạn dẻo mịn pha phù sa sông Đồng Nai',
     firingProfile: 'Nung sơ mộc 800°C → Nung phủ men lò rồng củi 1220°C',
-    wallThickness: '5.2mm - 6.0mm',
+    wallThickness: isLargeVessel ? '6.8mm - 8.2mm (Gia cố chống sụt nứt)' : '5.2mm - 6.0mm',
     shrinkage: '9.2% (Ủ lò rồng 1200°C)',
+    largeSizeWarning: isLargeVessel
+      ? `Lưu ý kích thước ${shapeParams.height}cm: Chiều cao lớn cần nghệ nhân vuốt phôi phân đoạn và nung chậm tại khoang trung tâm Lò rồng Tân Vạn để đảm bảo độ bền vững.`
+      : null,
   };
 
   return {
@@ -184,9 +242,10 @@ export function parsePromptToConcept(queryText = '') {
     title,
     dimensions,
     lathePoints,
-    shapeParams: parsePromptToShapeParams(lower, modelType),
+    shapeParams,
     suggestedGlaze,
     pattern,
+    customPattern,
     feasibility,
   };
 }
@@ -429,9 +488,9 @@ function catmullRomSpline(points, steps = 8) {
 
 /**
  * Chuyển prompt tự nhiên thành tham số hình dạng tham số (fallback rule engine)
- * Dùng khi LLaMA chưa được cấu hình hoặc trả về JSON lỗi.
+ * Tôn trọng tuyệt đối số đo cm cụ thể do người dùng chỉ định (ví dụ: 50cm, 18cm).
  */
-function parsePromptToShapeParams(lower, modelType = 'vase') {
+function parsePromptToShapeParams(lower, modelType = 'vase', explicitHeight = null, explicitDiameter = null) {
   let curvature = 'bulbous';
   if (lower.includes('dài') || lower.includes('thẳng') || lower.includes('cao')) curvature = 'slender';
   if (lower.includes('lệch') || lower.includes('hở') || lower.includes('mở') || lower.includes('loe')) curvature = 'flared';
@@ -440,13 +499,21 @@ function parsePromptToShapeParams(lower, modelType = 'vase') {
   let height = 22.0, maxRadius = 11.5, neckRatio = 0.35, rimFlare = 0.65, baseRadius = 0.45;
 
   if (modelType === 'bowl') {
-    height = 7.5; maxRadius = 7.0; neckRatio = 0.0; rimFlare = 1.0; baseRadius = 0.8;
+    height = 8.5; maxRadius = 7.5; neckRatio = 0.0; rimFlare = 1.0; baseRadius = 0.8;
   } else if (modelType === 'mug') {
-    height = 9.5; maxRadius = 4.2; neckRatio = 0.3; rimFlare = 0.8; baseRadius = 0.4;
+    height = 10.5; maxRadius = 4.5; neckRatio = 0.3; rimFlare = 0.8; baseRadius = 0.4;
   } else if (modelType === 'plate') {
-    height = 3.0; maxRadius = 11.0; neckRatio = 0.0; rimFlare = 1.2; baseRadius = 0.3;
+    height = 3.8; maxRadius = 13.0; neckRatio = 0.0; rimFlare = 1.2; baseRadius = 0.3;
   } else if (modelType === 'vase-narrow-neck') {
     height = 25.0; maxRadius = 11.5; neckRatio = 0.25; rimFlare = 1.1; baseRadius = 0.5;
+  }
+
+  // Tôn trọng tuyệt đối số đo explicit của người dùng
+  if (explicitHeight !== null && explicitHeight > 0) {
+    height = explicitHeight;
+  }
+  if (explicitDiameter !== null && explicitDiameter > 0) {
+    maxRadius = explicitDiameter / 2;
   }
 
   return { height, maxRadius, neckRatio, rimFlare, baseRadius, curvature };

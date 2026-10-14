@@ -40,6 +40,9 @@ export function DesignProvider({ children }) {
   const [isAiDeconstructing, setIsAiDeconstructing] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
 
+  // ── Bản nháp ý tưởng chuyển giao từ Chatbot sang Phác thảo AI ──
+  const [pendingAiDraft, setPendingAiDraft] = useState(null);
+
   // ── Lưu giữ họa tiết ban đầu của phôi để có thể ấn 'Mặc định' khôi phục bất cứ lúc nào ──
   const [defaultPattern, setDefaultPattern] = useState('sen_co');
   const [defaultPatternImage, setDefaultPatternImage] = useState(null);
@@ -237,6 +240,9 @@ export function DesignProvider({ children }) {
       setBrushSize,
       paintAction,
       setPaintAction,
+      // Draft transfer from Chatbot / External
+      pendingAiDraft,
+      setPendingAiDraft,
       // Convenience
       setGlazeById,
       setPatternById,
@@ -248,6 +254,7 @@ export function DesignProvider({ children }) {
     }),
     [
       modelType, selectedProduct, selectProductForDesign, isAiDeconstructing, aiAnalysisResult,
+      pendingAiDraft, setPendingAiDraft,
       defaultPattern, defaultPatternImage, resetPatternToDefault,
       glazeColor, glazeName, glazeRoughness,
       pattern, patternImage, patternTransform, customText, textTransform, customLathePoints, customGlbUrl, customShapes, addCustomShape,

@@ -20,7 +20,13 @@ export default function ChatbotAI({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { setActiveTab } = useNavigation();
-  const { setModelType, setGlazeColor, setGlazeName } = useDesign();
+  const {
+    setModelType,
+    setGlazeColor,
+    setGlazeName,
+    setPattern,
+    setPendingAiDraft,
+  } = useDesign();
 
   // Active ceramic spec tracked from conversation
   const [activeSpec, setActiveSpec] = useState(null);
@@ -52,13 +58,31 @@ export default function ChatbotAI({
     if (isOpen) scrollToBottom();
   }, [messages, isOpen, isFullscreen, isLoading]);
 
-  // ── Apply Spec to 3D Studio ──
-  const handleApplySpec = (spec) => {
+  // ── Chuyển giao thông số sang Phác thảo AI Co-Creator hoặc Studio 3D ──
+  const handleApplySpec = (spec, destination = 'ai-creator') => {
     if (!spec) return;
+    const height = Number(spec.heightCm) || 22;
+    const diameter = Number(spec.diameterCm) || (spec.archetype === 'mug' ? 9 : spec.archetype === 'bowl' ? 14 : spec.archetype === 'plate' ? 20 : 12);
+
+    if (setPendingAiDraft) {
+      setPendingAiDraft({
+        prompt: spec.userQuery || `Thiết kế ${spec.archetypeName || spec.archetype || 'gốm'} cao ${height}cm`,
+        archetype: spec.archetype || 'vase',
+        height: height,
+        maxRadius: Math.round(diameter / 2),
+        glazeHex: spec.glazeHex || '#2A6B5C',
+        glazeName: spec.glazeName || 'Men Xanh Đồng Trổ (Vert de Biên Hòa)',
+        pattern: spec.pattern || 'sen_co',
+        customText: spec.customText || '',
+      });
+    }
+
     if (spec.archetype && setModelType) setModelType(spec.archetype);
     if (spec.glazeHex && setGlazeColor) setGlazeColor(spec.glazeHex);
     if (spec.glazeName && setGlazeName) setGlazeName(spec.glazeName);
-    setActiveTab('studio-3d');
+    if (spec.pattern && setPattern) setPattern(spec.pattern);
+
+    setActiveTab(destination);
     setIsOpen(false);
   };
 
@@ -87,14 +111,18 @@ export default function ChatbotAI({
     if (!query || isLoading) return;
 
     // Fast UI actions from suggestion pills
-    if (query === 'Chuyển sang Phác thảo AI') {
-      setActiveTab('ai-creator');
-      setIsOpen(false);
+    if (query === 'Chuyển sang Phác thảo AI' || query === 'Tạo 3D ngay' || query === 'Tạo mô hình 3D') {
+      if (activeSpec) {
+        handleApplySpec(activeSpec, 'ai-creator');
+      } else {
+        setActiveTab('ai-creator');
+        setIsOpen(false);
+      }
       return;
     }
     if (query === 'Mở trong Xưởng 3D' || query === 'Mở trong Xưởng tạo hình 3D') {
       if (activeSpec) {
-        handleApplySpec(activeSpec);
+        handleApplySpec(activeSpec, 'studio-3d');
       } else {
         setActiveTab('studio-3d');
         setIsOpen(false);
@@ -151,6 +179,7 @@ export default function ChatbotAI({
 
       if (res.ok && data && data.success && data.reply) {
         if (data.spec) {
+          data.spec.userQuery = query;
           setActiveSpec(data.spec);
         }
 
@@ -286,10 +315,10 @@ export default function ChatbotAI({
           </div>
           <button
             type="button"
-            onClick={() => handleApplySpec(activeSpec)}
-            className="text-[10px] bg-ceramic-terracotta text-ceramic-paper px-2 py-0.5 rounded font-semibold hover:bg-ceramic-charcoal transition-colors cursor-pointer flex-shrink-0"
+            onClick={() => handleApplySpec(activeSpec, 'ai-creator')}
+            className="text-[10px] bg-ceramic-terracotta text-ceramic-paper px-2.5 py-1 rounded font-semibold hover:bg-ceramic-charcoal transition-colors cursor-pointer flex-shrink-0"
           >
-            Vào 3D →
+            Tạo 3D ({activeSpec.heightCm || 22}cm) →
           </button>
         </div>
       )}
@@ -364,22 +393,52 @@ function MessageBubble({ message, onSelectPrompt, onApplySpec, onNavigateTab }) 
 
         {/* ── Action Card for 3D Spec ── */}
         {message.spec && message.specReady && (
-          <div className="mt-3 p-2.5 rounded-xl bg-ceramic-cream/90 border border-ceramic-border space-y-2 text-ceramic-charcoal">
-            <div className="text-[11px] font-mono font-bold text-ceramic-terracotta flex items-center gap-1.5">
-              <span>✓ ĐẶC TẢ THIẾT KẾ ĐÃ SẴN SÀNG</span>
+          <div className="mt-3 p-3 rounded-xl bg-ceramic-cream/90 border border-ceramic-border space-y-2 text-ceramic-charcoal shadow-paper">
+            <div className="text-[11px] font-mono font-bold text-ceramic-terracotta flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                ĐẶC TẢ THIẾT KẾ ĐÃ SẴN SÀNG
+              </span>
+              <span className="text-[10px] text-ceramic-slate font-normal">DeepSeek</span>
             </div>
-            <div className="text-[11px] font-mono text-ceramic-slate space-y-0.5">
-              <div>• Dáng phôi: <strong className="text-ceramic-charcoal">{message.spec.archetypeName || message.spec.archetype}</strong></div>
-              {message.spec.heightCm && <div>• Chiều cao: <strong className="text-ceramic-charcoal">{message.spec.heightCm} cm</strong></div>}
-              {message.spec.glazeName && <div>• Sắc men: <strong className="text-ceramic-charcoal">{message.spec.glazeName}</strong></div>}
+            <div className="text-[11px] font-mono text-ceramic-slate space-y-1 bg-ceramic-paper/80 p-2.5 rounded-lg border border-ceramic-border/60">
+              <div className="flex justify-between">
+                <span>• Dáng phôi:</span>
+                <strong className="text-ceramic-charcoal">{message.spec.archetypeName || message.spec.archetype}</strong>
+              </div>
+              {message.spec.heightCm && (
+                <div className="flex justify-between">
+                  <span>• Chiều cao:</span>
+                  <strong className="text-ceramic-terracotta">{message.spec.heightCm} cm</strong>
+                </div>
+              )}
+              {message.spec.glazeName && (
+                <div className="flex justify-between">
+                  <span>• Sắc men:</span>
+                  <strong className="text-ceramic-charcoal truncate max-w-[150px]">{message.spec.glazeName}</strong>
+                </div>
+              )}
+              {message.spec.pattern && (
+                <div className="flex justify-between">
+                  <span>• Họa tiết:</span>
+                  <strong className="text-ceramic-charcoal">{message.spec.patternName || message.spec.pattern}</strong>
+                </div>
+              )}
             </div>
-            <div className="pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => onApplySpec(message.spec)}
-                className="w-full py-2 px-3 bg-ceramic-terracotta hover:bg-ceramic-charcoal active:scale-98 text-ceramic-paper text-xs font-mono rounded-lg transition-colors font-semibold shadow-paper cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px]"
+                onClick={() => onApplySpec(message.spec, 'ai-creator')}
+                className="py-2.5 px-3 bg-ceramic-terracotta hover:bg-ceramic-charcoal active:scale-98 text-ceramic-paper text-xs font-mono rounded-lg transition-colors font-semibold shadow-paper cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px]"
               >
-                Mở trong Xưởng 3D →
+                Tạo 3D ({message.spec.heightCm || 22}cm) →
+              </button>
+              <button
+                type="button"
+                onClick={() => onApplySpec(message.spec, 'studio-3d')}
+                className="py-2.5 px-3 bg-ceramic-paper hover:bg-ceramic-cream active:scale-98 text-ceramic-charcoal border border-ceramic-border text-xs font-mono rounded-lg transition-colors font-semibold shadow-paper cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px]"
+              >
+                Mở Xưởng 3D ⚒
               </button>
             </div>
           </div>

@@ -24,6 +24,10 @@ QUY TẮC PHỤC VỤ VÀ GIAO TIẾP:
    - Trả lời trung thực: nêu mức giá tham khảo (ví dụ: workshop trải nghiệm tham khảo khoảng 250.000đ/người, sản phẩm chế tác từ 180.000đ - 350.000đ tùy mẫu), nói rõ giá chính thức và slot trống sẽ được nhân viên xưởng xác nhận theo biểu mẫu thực tế.
 7. Khi khách nhắc đến "lá cờ Việt Nam": hiểu đúng là quốc kỳ cờ đỏ sao vàng (dùng men đỏ thẫm/đá đỏ bazan làm nền và men vàng hoàng yến khắc sao vàng), không nhầm lẫn sang lá cây thông thường.
 8. Khi khách chỉ hỏi kỹ thuật (như nhiệt độ nung, độ co ngót, cách bảo quản), hãy trả lời súc tích đúng trọng tâm, tôn trọng lệnh của khách, không ép mua hàng.
+10. QUY TẮC BẢO TOÀN THÔNG SỐ VÀ KÍCH THƯỚC:
+- Khi khách hàng đưa ra kích thước cụ thể (ví dụ: "cao 50 cm", "50cm", "đường kính 20cm"), bạn PHẢI giữ nguyên chính xác kích thước này trong "spec.heightCm" và "spec.diameterCm". TUYỆT ĐỐI KHÔNG tự động hạ xuống 22 cm hay thay đổi số đo của khách!
+- Nếu chiều cao lớn vượt chuẩn thông thường (ví dụ: từ 40cm đến 60cm như 50cm): trong "reply", hãy khen ngợi ý tưởng bình đại khí/lục bình uy nghiêm, đồng thời giải thích rõ góc nhìn kỹ thuật của nghệ nhân: Chiều cao 50cm đòi hỏi kỹ thuật vuốt phôi chia khúc thủ công và nung khoang giữa lò rồng củi 1220°C để tránh nứt ngót (10-11%). Sau đó hỏi khách có muốn giữ nguyên 50cm để tiến hành tạo mô hình 3D không.
+- Nếu khách yêu cầu hoa văn đặc thù như "Doraemon" hay hoạt họa, giữ đúng trong "spec.pattern": "doraemon", "spec.patternName": "Họa tiết Doraemon cách điệu".
 9. ĐỊNH DẠNG PHẢN HỒI BẮT BUỘC:
 Bạn PHẢI trả về duy nhất một đối tượng JSON hợp lệ (không kèm văn bản thừa bên ngoài khối JSON) theo cấu trúc:
 {
@@ -37,7 +41,7 @@ Bạn PHẢI trả về duy nhất một đối tượng JSON hợp lệ (không
     "diameterCm": 12,
     "glazeName": "Men Xanh Đồng Trổ (Vert de Biên Hòa)",
     "glazeHex": "#2A6B5C",
-    "pattern": "cuc_day", // "cuc_day" | "sen_co" | "dong_son" | "none"
+    "pattern": "cuc_day", // "cuc_day" | "sen_co" | "dong_son" | "doraemon" | "none"
     "customText": ""
   },
   "booking": {
@@ -191,6 +195,47 @@ export default async function handler(req, res) {
         try {
           parsed = JSON.parse(jsonMatch[1]);
         } catch (e2) {}
+      }
+    }
+
+    // Guarantee dimension & motif fidelity:
+    const lowerQuery = query.toLowerCase();
+    const heightMatch = lowerQuery.match(/(?:cao|chiều cao|height|h\s*[:=]?)\s*(\d+(?:[.,]\d+)?)\s*(?:cm|centimet)?/i) ||
+                        lowerQuery.match(/(\d+(?:[.,]\d+)?)\s*(?:cm|centimet)\s*(?:cao|chiều cao)?/i);
+    const explicitHeightNum = heightMatch ? parseFloat(heightMatch[1].replace(',', '.')) : null;
+
+    if (parsed) {
+      if (!parsed.spec) {
+        const isDesignQuery = /(?:tạo|thiết kế|dựng|làm|vẽ|khắc)\s*(?:3d|mô hình|mẫu)?/i.test(lowerQuery) ||
+                              /(?:bình|cốc|bát|đĩa|ly|lọ)/i.test(lowerQuery);
+        if (isDesignQuery) {
+          const archetype = /(?:cốc|ly|tách|mug)/i.test(lowerQuery) ? 'mug'
+            : /(?:bát|chén|tô|bowl)/i.test(lowerQuery) ? 'bowl'
+            : /(?:đĩa|dĩa|plate)/i.test(lowerQuery) ? 'plate'
+            : 'vase';
+          parsed.spec = {
+            ready: true,
+            archetype,
+            archetypeName: archetype === 'mug' ? 'Cốc gốm' : archetype === 'bowl' ? 'Bát thiền' : archetype === 'plate' ? 'Đĩa mộc' : 'Bình hoa',
+            heightCm: explicitHeightNum || (archetype === 'mug' ? 12 : archetype === 'bowl' ? 8 : archetype === 'plate' ? 4 : 25),
+            diameterCm: 14,
+            glazeName: 'Men Xanh Đồng Trổ (Vert de Biên Hòa)',
+            glazeHex: '#2A6B5C',
+            pattern: 'sen_co',
+          };
+        }
+      }
+
+      if (parsed.spec) {
+        parsed.spec.ready = true;
+        parsed.spec.userQuery = query;
+        if (explicitHeightNum && explicitHeightNum >= 3 && explicitHeightNum <= 300) {
+          parsed.spec.heightCm = explicitHeightNum;
+        }
+        if (/doraemon|đôrêmon|doremon/i.test(lowerQuery)) {
+          parsed.spec.pattern = 'doraemon';
+          parsed.spec.patternName = 'Họa tiết Doraemon';
+        }
       }
     }
 
