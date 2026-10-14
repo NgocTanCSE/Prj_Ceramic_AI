@@ -76,9 +76,17 @@ export default function HomeScreen() {
               <button
                 type="button"
                 onClick={() => setActiveTab('gallery')}
-                className="px-3.5 py-3 text-xs text-ceramic-slate hover:text-ceramic-charcoal underline underline-offset-4 font-medium transition-colors"
+                className="px-3.5 py-3 text-xs text-ceramic-slate hover:text-ceramic-charcoal underline underline-offset-4 font-medium transition-colors cursor-pointer"
               >
                 Xem thư viện phôi gốm →
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('heritage')}
+                className="px-3.5 py-3 text-xs text-ceramic-terracotta hover:text-ceramic-charcoal underline underline-offset-4 font-medium transition-colors cursor-pointer"
+              >
+                Di sản gốm & Phóng sự video →
               </button>
             </div>
 
@@ -441,6 +449,36 @@ export default function HomeScreen() {
               </button>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════
+         SECTION 5: THƯỚC PHIM DI SẢN & BẬC THẦY LÀNG NGHỀ
+         ════════════════════════════════════════════════════ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-16 border-t border-ceramic-border">
+        <div className="bg-ceramic-paper border border-ceramic-border rounded-3xl p-6 sm:p-10 shadow-card flex flex-col lg:flex-row items-center gap-8 justify-between">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ceramic-cream border border-ceramic-border text-xs font-mono text-ceramic-terracotta">
+              <span>🎬 PHÓNG SỰ TRUYỀN HÌNH ĐỒNG NAI</span>
+            </div>
+            <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-ceramic-charcoal leading-tight">
+              Khám phá 300 năm di sản gốm Biên Hòa qua những thước phim tài liệu
+            </h3>
+            <p className="text-xs sm:text-sm text-ceramic-slate leading-relaxed">
+              Cận cảnh lò rồng 36 bầu nung củi cao su Tân Vạn, bí quyết pha chế men xanh đồng Vert de Biên Hòa đoạt giải Vàng Paris 1925 và tâm sự của các bậc thầy chạm khắc champlevé.
+            </p>
+          </div>
+
+          <div className="flex-shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab('heritage')}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-ceramic-terracotta hover:bg-ceramic-charcoal text-ceramic-paper text-xs font-mono uppercase tracking-wider font-semibold transition-colors shadow-paper cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Xem toàn bộ video & câu chuyện</span>
+              <span>→</span>
+            </button>
           </div>
         </div>
       </section>
