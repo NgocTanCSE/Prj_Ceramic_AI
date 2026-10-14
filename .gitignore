@@ -1,2 +1,363 @@
+# ==========================================
+# Blockchain AI Security Project
+# Git Ignore Configuration
+# ==========================================
+
+# ==========================================
+# Environment Variables (CRITICAL - NEVER COMMIT)
+# ==========================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
 *.env
-*FE/node_modules*
+
+# Backup environment files
+.env.backup
+.env.old
+
+# ==========================================
+# Docker
+# ==========================================
+# Docker volumes and data
+docker-compose.override.yml
+.docker/
+
+# ==========================================
+# Database
+# ==========================================
+# PostgreSQL data
+*.sql.backup
+*.dump
+*.pgdata
+/database/backups/
+postgres_data/
+
+# Database credentials
+database.ini
+dbconfig.yml
+
+# ==========================================
+# Python / Backend
+# ==========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+!frontend/src/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ==========================================
+# Node.js / Frontend
+# ==========================================
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Next.js
+.next/
+out/
+.vercel
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================================
+# IDE / Editor
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# ==========================================
+# Operating System
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ==========================================
+# Logs
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================================
+# API Keys / Credentials (CRITICAL)
+# ==========================================
+# Alchemy API keys
+alchemy_key.txt
+api_keys.json
+credentials.json
+secrets.json
+config.secret.*
+
+# SSH keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# AWS credentials
+.aws/
+
+# GCP credentials
+gcloud/
+service-account*.json
+
+# ==========================================
+# AI Model Files (Large files)
+# ==========================================
+*.h5
+*.pkl
+*.joblib
+*.model
+models/trained/
+checkpoints/
+
+# Generated report figures (regenerable via scripts/generate_all_charts.py etc.)
+figures/*.png
+figures/*.pdf
+
+# ==========================================
+# Temporary files
+# ==========================================
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+.cache/
+
+# ==========================================
+# Blockchain specific
+# ==========================================
+# Private keys (NEVER COMMIT THESE!)
+*.keystore
+wallet.json
+private_keys/
+
+# Transaction history
+tx_history/
+
+# ==========================================
+# Miscellaneous
+# ==========================================
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
+
+# Backups
+*.backup
+backup/
+
+# Test data
+test_data/
+mock_data/
