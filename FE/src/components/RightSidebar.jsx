@@ -57,6 +57,7 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
     setActiveElement,
     currentPrice,
     selectedProduct,
+    setSelectedProduct,
   } = useDesign();
 
   const { addItem, setSelectedIds } = useCart();
@@ -316,6 +317,29 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
       setSelectedIds([newItem.id]);
     }
     setActiveTab('checkout');
+  };
+
+  // ── Đặt lịch ngắm mẫu tại xưởng (giống nút "Đặt lịch" trên ProductCard) ──
+  // Nếu chưa chọn sản phẩm từ Thư viện, đóng gói thiết kế hiện tại
+  // (dáng + men + ảnh snapshot + giá ước tính) thành "mẫu đã chọn" cho ScheduleScreen.
+  // KHÔNG gọi selectProductForDesign — không reset hoa văn/chữ đang thiết kế dở.
+  const handleScheduleVisit = () => {
+    if (!selectedProduct) {
+      let snapshot = null;
+      if (typeof onGetSnapshot === 'function') {
+        try { snapshot = onGetSnapshot(); } catch (_) {}
+      }
+      setSelectedProduct({
+        id: `studio-design-${Date.now()}`,
+        name: `${designName} (${glazeName})`,
+        type: modelType,
+        modelType,
+        image: snapshot || undefined,
+        price: currentPrice,
+      });
+    }
+    setActiveTab('schedule');
+    showToast(`Đã đưa "${selectedProduct?.name || `${designName} (${glazeName})`}" vào lịch đặt lịch ngắm mẫu!`);
   };
 
   return (
@@ -897,6 +921,25 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
             Đặt Chế Tác →
           </Button>
         </div>
+
+        {/* Nút Đặt lịch — đồng bộ style với nút "Đặt lịch" trên ProductCard */}
+        <button
+          type="button"
+          onClick={handleScheduleVisit}
+          title="Đặt lịch ngắm mẫu gốm trực tiếp tại xưởng — hệ thống sẽ chuyển đến trang đặt lịch"
+          className="
+            w-full py-3 rounded-xl text-xs tracking-wide font-semibold shadow-paper
+            border border-ceramic-terracotta text-ceramic-terracotta
+            hover:bg-ceramic-terracotta hover:text-ceramic-paper
+            transition-all duration-200 active:scale-95 cursor-pointer
+            flex items-center justify-center gap-1.5
+          "
+        >
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 9h12m-6 6h.01M9 18a3 3 0 100-6 3 3 0 000 6zm6 0a3 3 0 100-6 3 3 0 000 6z" />
+          </svg>
+          Đặt lịch ngắm mẫu
+        </button>
       </div>
     </aside>
   );

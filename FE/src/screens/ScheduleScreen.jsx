@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
 import { useDesign } from '../contexts/DesignContext';
-import { useScrollReveal } from '../hooks/useScrollReveal';
 import { usePersistentForm } from '../hooks/usePersistentForm';
 import { WORKSHOP_SLOTS, WORKSHOP_VENUE } from '../data/workshopSlots';
 import Button from '../ui/Button';
@@ -50,8 +49,11 @@ const VISIT_SLOTS = [
 ];
 
 export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000' }) {
+  // Ghi chú: không dùng useScrollReveal ở màn hình này.
+  // Lưới chọn mẫu ↔ form đặt lịch là chuyển đổi do user bấm (không phải cuộn trang),
+  // nên nội dung phải hiển thị NGAY — scroll-reveal (opacity:0 đến khi observer chạy)
+  // từng gây màn hình trắng vì section mới không nằm trong observer set khi mount.
   const containerRef = useRef(null);
-  useScrollReveal(containerRef);
   const { setActiveTab } = useNavigation();
   const { showToast } = useToast();
   const { selectedProduct, modelType, setModelType, setSelectedProduct, setPattern } = useDesign();
@@ -190,7 +192,7 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
       <div ref={containerRef} className="w-full h-full overflow-y-auto bg-ceramic-paper text-ceramic-charcoal font-body">
         <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 space-y-10">
 
-          <section className="scroll-reveal text-center space-y-6">
+          <section className="text-center space-y-6">
             <div className="space-y-3">
               <h3 className="font-editorial text-2xl font-bold text-ceramic-charcoal">
                 Chưa chọn sản phẩm
@@ -260,7 +262,7 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
       <div className="max-w-4xl mx-auto px-4 py-10 md:py-14 space-y-12">
 
         {/* ── Editorial Header ── */}
-        <section className="space-y-4 scroll-reveal">
+        <section className="space-y-4">
           <div className="flex items-center gap-3 text-xs font-mono text-ceramic-terracotta">
             <span className="uppercase tracking-wider">ĐẶT LỊCH NGỮ DÒNG NGẮM MẪU</span>
           </div>
@@ -268,7 +270,7 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
 
         {/* ── Selected Product Preview ── */}
         {hasSelectedProduct && (
-          <section className="scroll-reveal">
+          <section>
             <div className="flex items-start gap-4 p-6 border border-ceramic-border bg-ceramic-cream">
               <div className="w-20 h-20 border-2 border-ceramic-border flex-shrink-0 overflow-hidden bg-ceramic-paper">
                 {selectedProduct.image || selectedProduct.thumbnail ? (
@@ -312,7 +314,7 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
         )}
 
         {/* ── Appointment Form */}
-        <section className="scroll-reveal">
+        <section>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="border-t border-ceramic-border pt-4">
               <div className="text-xs font-mono uppercase tracking-wider text-ceramic-slate mb-3">

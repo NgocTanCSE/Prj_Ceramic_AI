@@ -42,6 +42,9 @@ export default function AICoCreatorScreen({
     setCustomText,
     setCustomLathePoints,
     setCustomGlbUrl,
+    selectedProduct,
+    setSelectedProduct,
+    currentPrice,
   } = useDesign();
   const { setActiveTab } = useNavigation();
   const { showToast } = useToast();
@@ -433,6 +436,33 @@ export default function AICoCreatorScreen({
     showToast('Đang đưa tác phẩm vào Xưởng Gốm 3D...');
   };
 
+  // ── Đặt lịch ngắm mẫu tại xưởng (giống nút "Đặt lịch" trên ProductCard) ──
+  // Đóng gói concept đang xem (tiêu đề, dáng, ảnh view đầu tiên) thành "mẫu đã chọn"
+  // rồi chuyển thẳng sang form đặt lịch. KHÔNG gọi selectProductForDesign
+  // để không reset lathePoints/pattern của bản phác thảo.
+  const handleScheduleVisit = () => {
+    if (!conceptResult) return;
+    const firstViewImg =
+      (conceptResult.views || []).find((v) => v.id === 'front')?.previewImg ||
+      conceptResult.views?.[0]?.previewImg ||
+      conceptResult.cleanedImage ||
+      undefined;
+    const scheduleProduct = selectedProduct?.id === `concept-${conceptResult.id || 'draft'}` && selectedProduct
+      ? selectedProduct
+      : {
+          id: `concept-${conceptResult.id || 'draft'}`,
+          name: conceptResult.title || prompt.trim() || 'Phác thảo mẫu AI',
+          type: conceptResult.modelType || 'vase',
+          modelType: conceptResult.modelType || 'vase',
+          image: firstViewImg,
+          price: conceptResult.price || currentPrice,
+        };
+    setSelectedProduct(scheduleProduct);
+    if (scheduleProduct.type) setModelType(scheduleProduct.type);
+    setActiveTab('schedule');
+    showToast(`Đã đưa "${scheduleProduct.name}" vào lịch đặt lịch ngắm mẫu!`);
+  };
+
   const currentViewObj = (conceptResult?.views || []).find((v) => v.id === activeView) || conceptResult?.views?.[0];
 
   return (
@@ -731,6 +761,20 @@ export default function AICoCreatorScreen({
                 `}
               >
                 <span>Chuyển vào Studio→</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleScheduleVisit}
+                title="Đặt lịch ngắm mẫu gốm trực tiếp tại xưởng — hệ thống sẽ chuyển đến trang đặt lịch"
+                className={`
+                  w-full sm:w-auto px-3.5 py-1.5 rounded-xl text-xs font-mono flex items-center justify-center gap-1.5 transition-all border active:scale-95
+                  bg-ceramic-paper border-ceramic-terracotta text-ceramic-terracotta hover:bg-ceramic-terracotta hover:text-ceramic-paper
+                `}
+              >
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 9h12m-6 6h.01M9 18a3 3 0 100-6 3 3 0 000 6zm6 0a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+                <span>Đặt lịch ngắm mẫu</span>
               </button>
             </div>
           </div>
