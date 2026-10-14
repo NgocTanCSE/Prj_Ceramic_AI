@@ -24,6 +24,8 @@ export default function AICoCreatorScreen({
   aiApiBase = import.meta.env.VITE_AI_API_BASE_URL || 'http://localhost:8000'
 }) {
   const [prompt, setPrompt] = useState('');
+  const [creatorState, setCreatorState] = useState('IDLE'); // 'IDLE' | 'AWAITING_CONFIRMATION' | 'GENERATING' | 'PREVIEW_READY'
+  const [specDraft, setSpecDraft] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Đang xử lý...');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -142,20 +144,128 @@ export default function AICoCreatorScreen({
     showToast(`Đã tạo mẫu 3D "${concept.title}"!`, 'success');
   };
 
-  // GIAI ĐOẠN 1: Khách gõ prompt -> gọi trực tiếp Cloudflare LLaMA -> concept parametric -> spline 3D
-  const handleGenerateFromPrompt = async (queryText) => {
+  // GIAI ĐOẠN 1: Khách gõ prompt -> Tổng hợp đặc tả kỹ thuật dự kiến (CHƯA tạo mô hình)
+  const handlePreparePromptSpec = (queryText) => {
     const text = (queryText || prompt).trim();
     if (!text) {
       showToast('Vui lòng nhập mô tả ý tưởng hoặc chọn gợi ý', 'info');
       return;
     }
+    setPrompt(text);
 
+    // Phân tích tham số ban đầu từ prompt
+    const initialConcept = parsePromptToConcept(text);
+    const mType = initialConcept.modelType || 'vase';
+    const draft = {
+      title: initialConcept.title || `Bản Vẽ Gốm Biên Hòa: ${text.slice(0, 24)}`,
+      prompt: text,
+      archetype: mType,
+      height: initialConcept.shapeParams?.height || (mType === 'mug' ? 12 : mType === 'bowl' ? 8 : mType === 'plate' ? 4 : 25),
+      maxRadius: initialConcept.shapeParams?.maxRadius || (mType === 'mug' ? 5 : mType === 'bowl' ? 7 : mType === 'plate' ? 10 : 11),
+      glazeName: initialConcept.suggestedGlaze?.name || 'Men Xanh Đồng Trổ (Vert de Biên Hòa)',
+      glazeHex: initialConcept.suggestedGlaze?.hex || '#2A6B5C',
+      roughness: initialConcept.suggestedGlaze?.roughness || 0.16,
+      pattern: initialConcept.pattern || 'cuc_day',
+      customText: initialConcept.customText || '',
+      wallThickness: '5.5 mm',
+      shrinkage: '9.2%',
+      firingTemp: '1220°C Lò rồng Tân Vạn',
+    };
+
+    setSpecDraft(draft);
+    setCreatorState('AWAITING_CONFIRMATION');
+    showToast('Đã tổng hợp đặc tả thiết kế! Vui lòng kiểm tra và bấm "Tạo mô hình 3D" để xác nhận.', 'info');
+  };
+
+  // GIAI ĐOẠN 1.5: Người dùng đã kiểm tra và bấm xác nhận -> BẮT ĐẦU DỰNG 3D
+  const handleConfirmAndGenerate = async () => {
+    if (!specDraft) return;
+    setCreatorState('GENERATING');
     setIsLoading(true);
-    setLoadingMessage('Cloudflare LLaMA đang phân tích & tạo model 3D tham số...');
+    setLoadingMessage('Đang đúc khuôn & tính toán Catmull-Rom spline 3D theo đặc tả đã duyệt...');
     setError(null);
 
-    // Gọi handleGenerateAIFallback — Cloudflare LLaMA → shapeParams → Catmull-Rom spline
-    await handleGenerateAIFallback(text);
+    try {
+      // 1. Generate Lathe points from confirmed specification
+      let lathePoints = paramsToLathePoints({
+        archetype: specDraft.archetype,
+        height: specDraft.height,
+        maxRadius: specDraft.maxRadius,
+      });
+
+      if (!lathePoints || lathePoints.length === 0) {
+        lathePoints = [
+          { x: 0, y: -0.8 },
+          { x: 0.45, y: -0.75 },
+          { x: 0.95, y: -0.2 },
+          { x: 0.55, y: 0.4 },
+          { x: 0.7, y: 0.75 },
+          { x: 0.58, y: 0.75 },
+          { x: 0.45, y: 0.35 },
+          { x: 0.75, y: -0.15 },
+          { x: 0.32, y: -0.65 },
+          { x: 0, y: -0.65 },
+        ];
+      }
+
+      // 2. Generate orthographic views
+      const initialPatternImg = (specDraft.pattern && specDraft.pattern !== 'none')
+        ? imageCache.get(specDraft.pattern) || null
+        : null;
+
+      const finalViews = generateOrthographicViews(
+        null,
+        specDraft.archetype,
+        specDraft.glazeHex,
+        specDraft.roughness,
+        lathePoints,
+        specDraft.pattern || 'none',
+        specDraft.customText || '',
+        specDraft.glazeName,
+        initialPatternImg,
+        'brown'
+      );
+
+      const conceptObj = {
+        title: specDraft.title,
+        prompt: specDraft.prompt,
+        modelType: specDraft.archetype,
+        archetype: specDraft.archetype,
+        dimensions: `Cao ${specDraft.height}cm × ĐK ${specDraft.maxRadius * 2}cm`,
+        shapeParams: {
+          height: specDraft.height,
+          maxRadius: specDraft.maxRadius,
+        },
+        suggestedGlaze: {
+          name: specDraft.glazeName,
+          hex: specDraft.glazeHex,
+          roughness: specDraft.roughness,
+        },
+        lathePoints,
+        pattern: specDraft.pattern,
+        patternImage: initialPatternImg,
+        customText: specDraft.customText,
+        rimStyle: 'brown',
+        feasibility: {
+          wallThickness: specDraft.wallThickness,
+          shrinkage: specDraft.shrinkage,
+          firingTemp: specDraft.firingTemp,
+        },
+        views: finalViews,
+      };
+
+      setConceptResult(conceptObj);
+      setCreatorState('PREVIEW_READY');
+      setActiveView('front');
+      setViewportMode('3d');
+      showToast(`Đã tạo thành công mô hình 3D "${specDraft.title}"!`, 'success');
+    } catch (err) {
+      console.error(err);
+      setError('Lỗi khi dựng 3D: ' + err.message);
+      setCreatorState('AWAITING_CONFIRMATION');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // GIAI ĐOẠN 2: Khách duyệt ảnh 2D -> gọi trực tiếp Cloudflare Vision → concept parametric → spline
@@ -534,8 +644,185 @@ export default function AICoCreatorScreen({
             </div>
           )}
 
-          {/* Ô Chat Trung Tâm khi chưa có stage2D và không loading */}
-          {!stage2D && !isLoading && (
+          {/* NẾU ĐANG CHỜ XÁC NHẬN ĐẶC TẢ: Hiển thị Thẻ Review Đặc Tả Kỹ Thuật */}
+          {specDraft && (creatorState === 'AWAITING_CONFIRMATION' || creatorState === 'EDITING_SPEC') && !isLoading && (
+            <div className="w-full max-w-xl bg-ceramic-paper rounded-3xl border border-ceramic-border p-6 shadow-card space-y-5 animate-scale-in">
+              <div className="flex items-center justify-between border-b border-ceramic-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-ceramic-terracotta animate-pulse" />
+                  <h3 className="font-editorial text-lg font-bold text-ceramic-charcoal">
+                    Bản Đặc Tả Thiết Kế Trước Khi Tạo 3D
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpecDraft(null);
+                    setCreatorState('IDLE');
+                  }}
+                  className="text-xs font-mono text-ceramic-slate hover:text-ceramic-charcoal cursor-pointer"
+                >
+                  ✕ Hủy & Nhập lại
+                </button>
+              </div>
+
+              <p className="text-xs text-ceramic-slate leading-relaxed">
+                Dựa trên ý tưởng: <strong className="text-ceramic-charcoal font-semibold">"{specDraft.prompt}"</strong>, AI đã tổng hợp các thông số kỹ thuật chế tác sau:
+              </p>
+
+              {/* Thông số chi tiết */}
+              <div className="space-y-3.5 text-xs font-mono bg-ceramic-cream/50 p-4 rounded-2xl border border-ceramic-border">
+                {/* 1. Dáng sản phẩm */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-ceramic-slate">
+                    <span>1. LOẠI SẢN PHẨM:</span>
+                    <span className="font-bold text-ceramic-charcoal uppercase">{specDraft.archetype}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: 'vase', label: 'Bình hoa' },
+                      { id: 'mug', label: 'Cốc gốm' },
+                      { id: 'bowl', label: 'Bát thiền' },
+                      { id: 'plate', label: 'Đĩa mộc' },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSpecDraft(prev => ({ ...prev, archetype: item.id }))}
+                        className={`px-3 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                          specDraft.archetype === item.id
+                            ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
+                            : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Chiều cao & Đường kính */}
+                <div className="space-y-1.5 pt-2 border-t border-ceramic-border/50">
+                  <div className="flex justify-between items-center text-ceramic-slate">
+                    <span>2. CHIỀU CAO THIẾT KẾ:</span>
+                    <span className="font-bold text-ceramic-terracotta">{specDraft.height} cm</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {[18, 22, 25, 30].map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setSpecDraft(prev => ({ ...prev, height: h }))}
+                        className={`flex-1 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                          specDraft.height === h
+                            ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
+                            : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
+                        }`}
+                      >
+                        {h} cm
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Màu men truyền thống */}
+                <div className="space-y-1.5 pt-2 border-t border-ceramic-border/50">
+                  <div className="flex justify-between items-center text-ceramic-slate">
+                    <span>3. MEN GỐM NUNG LÒ RỒNG:</span>
+                    <span className="font-bold text-ceramic-charcoal truncate max-w-[180px]">{specDraft.glazeName}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { name: 'Men Xanh Đồng Trổ (Vert de Biên Hòa)', hex: '#2A6B5C', label: 'Xanh đồng' },
+                      { name: 'Men Đá Đỏ Bazan Bửu Long', hex: '#9E472A', label: 'Đá đỏ' },
+                      { name: 'Men Vàng Hoàng Yến', hex: '#C88A2E', label: 'Vàng hổ phách' },
+                      { name: 'Men Trắng Rạn Phù Sa', hex: '#DCD3C1', label: 'Trắng rạn' },
+                    ].map((g) => (
+                      <button
+                        key={g.hex}
+                        type="button"
+                        onClick={() => setSpecDraft(prev => ({ ...prev, glazeName: g.name, glazeHex: g.hex }))}
+                        className={`px-2.5 py-1 rounded-lg border text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          specDraft.glazeHex === g.hex
+                            ? 'bg-ceramic-charcoal text-ceramic-paper border-ceramic-charcoal font-semibold shadow-paper'
+                            : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full inline-block border border-ceramic-border" style={{ backgroundColor: g.hex }} />
+                        <span>{g.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Họa tiết khắc chìm */}
+                <div className="space-y-1.5 pt-2 border-t border-ceramic-border/50">
+                  <div className="flex justify-between items-center text-ceramic-slate">
+                    <span>4. HỌA TIẾT CHẾ TÁC:</span>
+                    <span className="font-bold text-ceramic-charcoal">{specDraft.pattern || 'Hoa cúc dây'}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: 'cuc_day', label: 'Hoa cúc dây 1925' },
+                      { id: 'sen_co', label: 'Hoa sen cổ' },
+                      { id: 'dong_son', label: 'Trống đồng' },
+                      { id: 'none', label: 'Gốm trơn mộc' },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSpecDraft(prev => ({ ...prev, pattern: p.id }))}
+                        className={`px-2.5 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                          specDraft.pattern === p.id
+                            ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
+                            : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 5. Tiêu chuẩn xưởng Tân Vạn */}
+                <div className="pt-2 border-t border-ceramic-border/50 grid grid-cols-2 gap-2 text-[10.5px] text-ceramic-slate">
+                  <div>Thành gốm: <strong className="text-ceramic-charcoal">{specDraft.wallThickness}</strong></div>
+                  <div>Độ co ngót bù trừ: <strong className="text-ceramic-terracotta">{specDraft.shrinkage}</strong></div>
+                  <div className="col-span-2">Nhiệt độ nung: <strong className="text-ceramic-charcoal">{specDraft.firingTemp}</strong></div>
+                </div>
+              </div>
+
+              {/* XÁC NHẬN - CHỈ BẤM NÚT NÀY MỚI SINH 3D */}
+              <div className="pt-2 space-y-2">
+                <div className="text-xs font-body text-ceramic-charcoal text-center italic">
+                  "Bạn có muốn tôi tạo mô hình 3D theo thông số này không?"
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={() => {
+                      setSpecDraft(null);
+                      setCreatorState('IDLE');
+                    }}
+                  >
+                    ✕ Hủy bỏ
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleConfirmAndGenerate}
+                    className="bg-ceramic-terracotta hover:bg-ceramic-charcoal text-ceramic-paper font-semibold shadow-paper"
+                  >
+                    ✓ Tạo mô hình 3D ngay
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ô Chat Trung Tâm khi ở trạng thái IDLE */}
+          {!stage2D && !specDraft && !isLoading && (
             <div className="w-full max-w-2xl bg-ceramic-paper rounded-3xl border border-ceramic-border shadow-card hover:shadow-card focus-within:shadow-card focus-within:border-ceramic-terracotta transition-all p-3 md:p-4">
               <div className="flex items-center gap-3">
                 {/* Nút Upload file ảnh mẫu */}
@@ -554,7 +841,7 @@ export default function AICoCreatorScreen({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
                   title="Tải ảnh phác thảo hoặc mẫu chụp lên"
-                  className="w-10 h-10 rounded-full bg-ceramic-cream hover:bg-ceramic-border/60 text-ceramic-charcoal flex items-center justify-center transition-all flex-shrink-0 text-lg font-bold"
+                  className="w-10 h-10 rounded-full bg-ceramic-cream hover:bg-ceramic-border/60 text-ceramic-charcoal flex items-center justify-center transition-all flex-shrink-0 text-lg font-bold cursor-pointer"
                 >
                   +
                 </button>
@@ -564,8 +851,8 @@ export default function AICoCreatorScreen({
                   type="text"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleGenerateFromPrompt()}
-                  placeholder="Nhập mô tả dáng gốm (VD: một chiếc cốc gốm hình chú ếch xanh dễ thương)..."
+                  onKeyDown={(e) => e.key === 'Enter' && handlePreparePromptSpec()}
+                  placeholder="Nhập mô tả ý tưởng (VD: một chiếc bình gốm Biên Hòa cao 25cm men xanh đồng)..."
                   maxLength={200}
                   className="flex-1 text-sm md:text-base bg-transparent border-none outline-none text-ceramic-charcoal placeholder-ceramic-slate/70 font-body px-1"
                   aria-label="Nhập mô tả ý tưởng gốm sứ"
@@ -575,16 +862,16 @@ export default function AICoCreatorScreen({
                 <button
                   type="button"
                   disabled={isLoading || !prompt.trim()}
-                  onClick={() => handleGenerateFromPrompt()}
+                  onClick={() => handlePreparePromptSpec()}
                   className={`
                     h-10 px-5 rounded-2xl text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 flex-shrink-0
                     ${prompt.trim()
-                      ? 'bg-ceramic-terracotta text-ceramic-paper hover:bg-ceramic-terracotta/90 shadow-paper cursor-pointer'
+                      ? 'bg-ceramic-terracotta text-ceramic-paper hover:bg-ceramic-charcoal shadow-paper cursor-pointer'
                       : 'bg-ceramic-cream text-ceramic-slate/60 cursor-not-allowed'
                     }
                   `}
                 >
-                  <span>Phác thảo 2D</span>
+                  <span>Xem thông số →</span>
                 </button>
               </div>
             </div>
@@ -639,7 +926,7 @@ export default function AICoCreatorScreen({
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleGenerateFromPrompt()}
+                onKeyDown={(e) => e.key === 'Enter' && handlePreparePromptSpec()}
                 placeholder="Nhập mô tả ý tưởng khác..."
                 className="w-full text-sm px-4 py-3 bg-ceramic-paper border border-ceramic-border rounded-xl focus:outline-none focus:border-ceramic-terracotta text-ceramic-charcoal placeholder-ceramic-slate font-body"
               />
@@ -668,10 +955,10 @@ export default function AICoCreatorScreen({
                 variant="primary"
                 size="md"
                 disabled={isLoading || !prompt.trim()}
-                onClick={() => handleGenerateFromPrompt()}
-                className="py-2.5 px-4 text-xs"
+                onClick={() => handlePreparePromptSpec()}
+                className="py-2.5 px-4 text-xs bg-ceramic-terracotta hover:bg-ceramic-charcoal text-ceramic-paper"
               >
-                {isLoading ? 'Đang tạo...' : 'Phân tích lại'}
+                {isLoading ? 'Đang tạo...' : 'Xem thông số mới →'}
               </Button>
             </div>
           </div>
