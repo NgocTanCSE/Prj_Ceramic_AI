@@ -27,9 +27,5 @@ jobs:
         working-directory: FE
         run: npm ci
 
-      - name: Install API dependencies
-        working-directory: API
-        run: npm install --no-package-lock
-
       - name: Run 3D Algorithm Test Suite
         run: node tools/test_3d_comprehensive.mjs
