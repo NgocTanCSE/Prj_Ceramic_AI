@@ -5,9 +5,11 @@ import { NavigationProvider, useNavigation } from './contexts/NavigationContext'
 import { DesignProvider } from './contexts/DesignContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 import LeftSidebar from './components/LeftSidebar';
 import ChatbotAI from './components/ChatbotAI';
+import AuthModal from './components/AuthModal';
 
 import HomeScreen from './screens/HomeScreen';
 import GalleryScreen from './screens/GalleryScreen';
@@ -15,6 +17,7 @@ import AICoCreatorScreen from './screens/AICoCreatorScreen';
 import StudioScreen from './screens/StudioScreen';
 import CartScreen from './screens/CartScreen';
 import CheckoutScreen from './screens/CheckoutScreen';
+import HeritageScreen from './screens/HeritageScreen';
 
 // Lazy-load ScheduleScreen — only fetched when user navigates to it
 const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen'));
@@ -32,6 +35,7 @@ function ScreenRouter() {
     gallery: <GalleryScreen />,
     'ai-creator': <AICoCreatorScreen />,
     'studio-3d': <StudioScreen />,
+    heritage: <HeritageScreen />,
     cart: <CartScreen />,
     checkout: <CheckoutScreen />,
     schedule: (
@@ -151,6 +155,9 @@ function AppShell() {
 
       {/* Float Agent Assistant */}
       <ChatbotAI isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
+
+      {/* User Authentication & Saved Designs Modal */}
+      <AuthModal />
     </div>
   );
 }
@@ -163,13 +170,15 @@ function AppShell() {
 function Root() {
   return (
     <NavigationProvider>
-      <DesignProvider>
-        <CartProvider>
-          <ToastProvider>
-            <AppShell />
-          </ToastProvider>
-        </CartProvider>
-      </DesignProvider>
+      <AuthProvider>
+        <DesignProvider>
+          <CartProvider>
+            <ToastProvider>
+              <AppShell />
+            </ToastProvider>
+          </CartProvider>
+        </DesignProvider>
+      </AuthProvider>
     </NavigationProvider>
   );
 }
