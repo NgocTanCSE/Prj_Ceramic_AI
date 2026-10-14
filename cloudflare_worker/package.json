@@ -1,0 +1,16 @@
+{
+  "name": "ceramic-ai-3d",
+  "version": "0.1.0",
+  "description": "Cloudflare Worker: photo -> silhouette -> 3D lathe points (pure JS) + AI image editing via Workers AI. Deploys image to Cloudflare Pages (FE: Three.js lathe 3D).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "node --check src/index.js"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "jpeg-js": "^0.4.4"
+  }
+}

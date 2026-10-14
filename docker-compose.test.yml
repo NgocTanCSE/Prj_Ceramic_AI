@@ -1,0 +1,17 @@
+# One-shot verification runner.
+#   docker compose -f docker-compose.test.yml run --rm test
+#   docker compose -f docker-compose.test.yml run --rm -e RUN_FE_BUILD=1 test
+services:
+  test:
+    build:
+      context: .
+      dockerfile: docker/test-runner/Dockerfile
+      args:
+        RUN_FE_BUILD: ${RUN_FE_BUILD:-0}
+    container_name: ceramic_test_runner
+    environment:
+      - PORT=8001
+      - RUN_FE_BUILD=${RUN_FE_BUILD:-0}
+    # The API runs in-process (backgrounded by entrypoint.sh), so no ports exposed.
+    init: true
+    restart: "no"

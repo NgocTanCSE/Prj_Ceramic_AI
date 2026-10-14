@@ -1,0 +1,20 @@
+name = "ceramic-ai-3d"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# ---- Điền account_id của bạn (lấy ở https://dash.cloudflare.com => Workers & Pages) ----
+account_id = "YOUR_ACCOUNT_ID"
+
+# Workers AI binding — dùng cho "AI chỉnh ảnh" (image-to-image edit).
+[ai]
+binding = "AI"
+
+[vars]
+# Model dùng cho image-to-image editing (chỉnh sửa ảnh theo prompt).
+# flux-2-klein-4b: "unifies image generation and editing" — hỗ trợ image+text.
+EDIT_MODEL = "@cf/black-forest-labs/flux-2-klein-4b"
+NORM = 750
+
+[triggers]
+# Worker luôn chạy (không cần cron).
+no_scheduler = true

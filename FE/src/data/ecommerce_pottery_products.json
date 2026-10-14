@@ -1,0 +1,1597 @@
+{
+  "generatedAt": "2026-10-09T18:49:46.125Z",
+  "totalCount": 24,
+  "description": "Bộ dữ liệu sản phẩm gốm thực tế phân loại chuẩn 100%: 4 nhóm phôi bàn xoay 3D (Bình hoa, Ly cốc, Bát chén, Đĩa mỹ nghệ)",
+  "categories": [
+    "vase",
+    "mug",
+    "bowl",
+    "plate"
+  ],
+  "products": [
+    {
+      "id": "pottery-vase-001",
+      "name": "Lọ Hoa Gốm sứ G&T Vuốt Tay Vẽ Sen Chuồn Dáng Thạp – Bình Cắm Hoa Thủ Công Trang Trí Decor",
+      "category": "vase",
+      "price": 1320000,
+      "formattedPrice": "1.320.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-001.png",
+      "thumbnail": "/assets/products/pottery-vase-001.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 1320000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 1320000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-vase-002",
+      "name": "Lọ Hoa Gốm Bát Tràng Vuốt Tay Dáng Thạp Vẽ Sen Chuồn – Bình Cắm Hoa Gốm Sứ Thủ Công Trang Trí Phòng Khách Cao Cấp",
+      "category": "vase",
+      "price": 1320000,
+      "formattedPrice": "1.320.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-002.png",
+      "thumbnail": "/assets/products/pottery-vase-002.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 1320000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 1320000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-vase-003",
+      "name": "Lọ Hoa Gốm Bát Tràng Vuốt Tay Dáng Chân Đèn Vẽ Sen Chuồn Thủ Công – Bình Cắm Hoa Trang Trí Phòng Khách",
+      "category": "vase",
+      "price": 1450000,
+      "formattedPrice": "1.450.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-003.png",
+      "thumbnail": "/assets/products/pottery-vase-003.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 1450000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 1450000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-vase-004",
+      "name": "Lọ Hoa Gốm Bát Tràng Vuốt Tay Dáng Lồng Đèn Vẽ Cẩm Tú Cầu Thủ Công – Bình Cắm Hoa Trang Trí Phòng Khách",
+      "category": "vase",
+      "price": 1320000,
+      "formattedPrice": "1.320.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-004.png",
+      "thumbnail": "/assets/products/pottery-vase-004.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 1320000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 1320000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-vase-005",
+      "name": "Bình hoa lọ hoa khắc tay thủ công gốm sứ",
+      "category": "vase",
+      "price": 220000,
+      "formattedPrice": "220.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-005.png",
+      "thumbnail": "/assets/products/pottery-vase-005.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 220000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 220000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-vase-006",
+      "name": "Lọ hoa gốm sứ vuốt tay dáng ly thấp vẽ hoa hướng dương – decor phòng khách",
+      "category": "vase",
+      "price": 1450000,
+      "formattedPrice": "1.450.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-vase-006.png",
+      "thumbnail": "/assets/products/pottery-vase-006.png",
+      "tag": "BÌNH HOA DÁNG KHÍ",
+      "aiDeconstructed": {
+        "base3DType": "vase",
+        "categoryName": "Bình hoa dáng khí",
+        "tag": "BÌNH HOA DÁNG KHÍ",
+        "dimensions": "14cm × 26cm",
+        "volume": "1500ml",
+        "wallThickness": "6.0 - 7.0mm",
+        "shrinkageRate": "10.5% (Ủ lò rồng 1220°C)",
+        "craftDifficulty": "Bàn xoay trung cấp",
+        "recommendedClay": "Đất sét Tân Vạn pha cát thạch anh",
+        "firingTemp": "1220°C (Lò rồng củi)",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 280000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 1450000,
+            "title": "Giao nghệ nhân tiện phôi & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 280000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 1450000,
+          "title": "Giao nghệ nhân tiện phôi & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 14cm × 26cm, độ dày thành 6.0 - 7.0mm, độ co ngót lò nung 10.5% (Ủ lò rồng 1220°C)."
+    },
+    {
+      "id": "pottery-mug-001",
+      "name": "Cốc vuốt có quai S2 Đông Gia - màu men hỏa biến tự nhiên trắng bóng 15 BS",
+      "category": "mug",
+      "price": 182000,
+      "formattedPrice": "182.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-001.png",
+      "thumbnail": "/assets/products/pottery-mug-001.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 182000,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 182000,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-mug-002",
+      "name": "Ly Gốm Thông Điệp Sáng Tạo - Trung Nguyên Legend",
+      "category": "mug",
+      "price": 135000,
+      "formattedPrice": "135.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-002.png",
+      "thumbnail": "/assets/products/pottery-mug-002.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 135000,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 135000,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-mug-003",
+      "name": "Bộ 2 Ly Có Nắp Hình Anh Đào Xanh Gốm Sứ Bát Tràng",
+      "category": "mug",
+      "price": 145000,
+      "formattedPrice": "145.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-003.png",
+      "thumbnail": "/assets/products/pottery-mug-003.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 145000,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 145000,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-mug-004",
+      "name": "Cốc cao chữ Y gốm sứ cao cấp phong cách hiện đại LETTER CUP5193Y",
+      "category": "mug",
+      "price": 438900,
+      "formattedPrice": "438.900 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-004.png",
+      "thumbnail": "/assets/products/pottery-mug-004.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 438900,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 438900,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-mug-005",
+      "name": "Cốc cao chữ M gốm sứ cao cấp phong cách hiện đại LETTER CUP 5193M",
+      "category": "mug",
+      "price": 438900,
+      "formattedPrice": "438.900 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-005.png",
+      "thumbnail": "/assets/products/pottery-mug-005.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 438900,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 438900,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-mug-006",
+      "name": "Cốc cao chữ E gốm sứ cao cấp phong cách hiện đại LETTER CUP 5193E",
+      "category": "mug",
+      "price": 438900,
+      "formattedPrice": "438.900 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-mug-006.png",
+      "thumbnail": "/assets/products/pottery-mug-006.png",
+      "tag": "LY CỐC VUỐT TAY",
+      "aiDeconstructed": {
+        "base3DType": "mug",
+        "categoryName": "Ly & Cốc vuốt tay",
+        "tag": "LY CỐC VUỐT TAY",
+        "dimensions": "8.5cm × 10.5cm",
+        "volume": "380ml",
+        "wallThickness": "4.5 - 5.5mm",
+        "shrinkageRate": "9.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Dễ tạo hình trên bàn xoay",
+        "recommendedClay": "Đất sét xám Tân Vạn dẻo mịn",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 220000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 438900,
+            "title": "Giao nghệ nhân vuốt tay & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 220000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 438900,
+          "title": "Giao nghệ nhân vuốt tay & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 8.5cm × 10.5cm, độ dày thành 4.5 - 5.5mm, độ co ngót lò nung 9.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-001",
+      "name": "Bộ 10 bát ăn cơm gốm sứ Bát Tràng hoạ tiết vẽ tay thủ công cao cấp",
+      "category": "bowl",
+      "price": 359000,
+      "formattedPrice": "359.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-001.png",
+      "thumbnail": "/assets/products/pottery-bowl-001.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 359000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 359000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-002",
+      "name": "Bộ 10 bát con ăn cơm vẽ hoa đào đỏ gốm sứ Bát Tràng",
+      "category": "bowl",
+      "price": 350000,
+      "formattedPrice": "350.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-002.png",
+      "thumbnail": "/assets/products/pottery-bowl-002.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 350000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 350000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-003",
+      "name": "Bộ 10 bát ăn cơm men trắng gốm Bát Tràng",
+      "category": "bowl",
+      "price": 300000,
+      "formattedPrice": "300.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-003.png",
+      "thumbnail": "/assets/products/pottery-bowl-003.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 300000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 300000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-004",
+      "name": "Bát Cơm Miệng Loe Xanh Hoả Biến - Gốm Sứ Cao Cấp Bát Tràng",
+      "category": "bowl",
+      "price": 83000,
+      "formattedPrice": "83.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-004.png",
+      "thumbnail": "/assets/products/pottery-bowl-004.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 83000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 83000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-005",
+      "name": "Bát cơm D11 men xanh hoả biến - Bát Men Xanh Biển cực đẹp và tinh tế - An toàn sức khỏe người tiêu dùng - Gốm Sứ Cao Cấp Bát Tràng",
+      "category": "bowl",
+      "price": 61000,
+      "formattedPrice": "61.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-005.png",
+      "thumbnail": "/assets/products/pottery-bowl-005.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 61000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 61000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-bowl-006",
+      "name": "Bộ bát cơm hoa sen đen vẽ tay gốm sứ Gia Hưng Bát Tràng",
+      "category": "bowl",
+      "price": 250000,
+      "formattedPrice": "250.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-bowl-006.png",
+      "thumbnail": "/assets/products/pottery-bowl-006.png",
+      "tag": "BÁT TRÀ & BÁT CƠM",
+      "aiDeconstructed": {
+        "base3DType": "bowl",
+        "categoryName": "Bát trà & Bát cơm",
+        "tag": "BÁT TRÀ & BÁT CƠM",
+        "dimensions": "12.5cm × 6.5cm",
+        "volume": "350ml",
+        "wallThickness": "5.0 - 5.8mm",
+        "shrinkageRate": "9.5% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Lấy tâm bàn xoay & vuốt lòng bát",
+        "recommendedClay": "Đất sét phù sa sông Đồng Nai",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 250000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 250000,
+            "title": "Giao nghệ nhân vuốt bát & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 250000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 250000,
+          "title": "Giao nghệ nhân vuốt bát & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối 12.5cm × 6.5cm, độ dày thành 5.0 - 5.8mm, độ co ngót lò nung 9.5% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-001",
+      "name": "Đĩa lá chuối hỏa biến,thủ công bởi Nghệ Nhân Gomie Ceramic Bát Tràng, men hỏa biến cao cấp, an toàn sức khỏe",
+      "category": "plate",
+      "price": 253000,
+      "formattedPrice": "253.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-001.png",
+      "thumbnail": "/assets/products/pottery-plate-001.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 253000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 253000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-002",
+      "name": "Đĩa hoa anh đào men nâu tuyết hỏa biến thủ công Gomie Ceramic Bát Tràng, men hỏa biến cao cấp,an toàn sức khỏe",
+      "category": "plate",
+      "price": 319000,
+      "formattedPrice": "319.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-002.png",
+      "thumbnail": "/assets/products/pottery-plate-002.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 319000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 319000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-003",
+      "name": "Đĩa vuông ảo gấm vàng hỏa biến chuyên dùng cho nhà hàng, thủ công bởi Nghệ Nhân Gomie Bát Tràng,an toàn sức khỏe",
+      "category": "plate",
+      "price": 253000,
+      "formattedPrice": "253.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-003.png",
+      "thumbnail": "/assets/products/pottery-plate-003.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 253000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 253000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-004",
+      "name": "Đĩa hoa anh đào men gấm vàng hỏa biến Gomie Ceramic Bát Tràng ,men hỏa biến cao cấp,an toàn sức khỏe",
+      "category": "plate",
+      "price": 363000,
+      "formattedPrice": "363.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-004.png",
+      "thumbnail": "/assets/products/pottery-plate-004.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 363000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 363000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-005",
+      "name": "Đĩa tròn men gấm vàng hỏa biến cao cấp GOMIE BÁT TRÀNG chuyên dùng cho nhà hàng, khách sạn 5 sao",
+      "category": "plate",
+      "price": 110000,
+      "formattedPrice": "110.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-005.png",
+      "thumbnail": "/assets/products/pottery-plate-005.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 110000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 110000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    },
+    {
+      "id": "pottery-plate-006",
+      "name": "Đĩa hoa anh đào men xanh hỏa biến Gomie Ceramic Bát Tràng, men hỏa biến cao cấp,an toàn sức khỏe",
+      "category": "plate",
+      "price": 319000,
+      "formattedPrice": "319.000 ₫",
+      "rating": 5,
+      "reviewCount": 15,
+      "image": "/assets/products/pottery-plate-006.png",
+      "thumbnail": "/assets/products/pottery-plate-006.png",
+      "tag": "ĐĨA MỸ NGHỆ",
+      "aiDeconstructed": {
+        "base3DType": "plate",
+        "categoryName": "Đĩa mỹ nghệ",
+        "tag": "ĐĨA MỸ NGHỆ",
+        "dimensions": "Đường kính 21cm × Cao 3.2cm",
+        "volume": "Đĩa nông",
+        "wallThickness": "5.5 - 6.5mm",
+        "shrinkageRate": "10.0% (Ủ lò rồng 1200°C)",
+        "craftDifficulty": "Mở vành đĩa & chuốt lòng phẳng",
+        "recommendedClay": "Đất sét Tân Vạn tuyển lọc chống cong vênh",
+        "firingTemp": "1200°C",
+        "craftOptions": {
+          "selfWorkshop": {
+            "available": true,
+            "price": 260000,
+            "title": "Tự đến xưởng nặn (Kèm 1-1)"
+          },
+          "artisanCommission": {
+            "available": true,
+            "price": 319000,
+            "title": "Giao nghệ nhân tiện đĩa & nung lò"
+          }
+        }
+      },
+      "recommendedGlazes": [
+        {
+          "id": "vert-de-bien-hoa",
+          "name": "Men Xanh Đồng Vert de Biên Hòa",
+          "colorHex": "#2A6B5C"
+        },
+        {
+          "id": "men-da-do",
+          "name": "Men Đá Đỏ Bửu Long",
+          "colorHex": "#B85D38"
+        },
+        {
+          "id": "men-ran-co",
+          "name": "Men Rạn Tro Cổ",
+          "colorHex": "#D8D0C5"
+        }
+      ],
+      "craftOptions": {
+        "selfWorkshop": {
+          "available": true,
+          "price": 260000,
+          "title": "Tự đến xưởng nặn (Kèm 1-1)"
+        },
+        "artisanCommission": {
+          "available": true,
+          "price": 319000,
+          "title": "Giao nghệ nhân tiện đĩa & nung lò"
+        }
+      },
+      "vietnameseArtisanStory": "Tiêu bản phôi gốm bàn xoay đối chiếu thực tế. AI đã giải mã tỷ lệ hình khối Đường kính 21cm × Cao 3.2cm, độ dày thành 5.5 - 6.5mm, độ co ngót lò nung 10.0% (Ủ lò rồng 1200°C)."
+    }
+  ]
+}

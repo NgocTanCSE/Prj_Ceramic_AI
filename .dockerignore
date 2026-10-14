@@ -1,0 +1,14 @@
+# Root .dockerignore — applies only to root-context builds (the test runner).
+# Keeps the 810MB local node_modules / model weights out of the image so we install fresh inside.
+node_modules
+**/node_modules
+dist
+**/dist/build
+.git
+.git
+*.log
+.env
+.env.*
+docker-compose*.yml
+docker-compose*.yaml
+Dockerfile*

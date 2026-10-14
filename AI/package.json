@@ -1,0 +1,19 @@
+{
+  "name": "ai",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  },
+  "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5"
+  }
+}

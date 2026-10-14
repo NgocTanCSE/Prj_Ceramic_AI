@@ -1,0 +1,79 @@
+services:
+  # 1. FRONTEND SERVICE (React + Three.js 3D Studio + Tailwind)
+  # Production multi-stage build → nginx serving static assets
+  fe:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+    container_name: ceramic_fe
+    ports:
+      - "${PORT_FE:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      be:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-S", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # 2. BACKEND CORE SERVICE (Products, Designs, Orders, Workshop Bookings)
+  # Monolith in-memory storage — no external DB required (MVP)
+  be:
+    build:
+      context: ./BE
+      dockerfile: Dockerfile
+    container_name: ceramic_be
+    ports:
+      - "${PORT_BE:-5000}:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - FE_ORIGIN=http://localhost:${PORT_FE:-3000}
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-S", "http://localhost:5000/api/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  # 3. AI & GENERATIVE ENGINE (Chatbot Advisor, 6-View Vector, Feasibility Scoring)
+  api:
+    build:
+      context: .
+      dockerfile: API/Dockerfile
+    container_name: ceramic_api
+    ports:
+      - "${PORT_API:-8000}:8000"
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+      # Cloudflare Workers AI (LLaMA) — primary backend (paste token after deploy)
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
+      - CLOUDFLARE_MODEL=${CLOUDFLARE_MODEL:-@cf/meta/llama-3.1-8b-instruct-fp8}
+      - CLOUDFLARE_VISION_MODEL=${CLOUDFLARE_VISION_MODEL:-@cf/meta/llama-3.2-11b-vision-instruct}
+      # No external LLM backend — Cloudflare LLaMA (see CLOUDFLARE_* vars above)
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HF_FLUX_SPACE=${HF_FLUX_SPACE:-black-forest-labs/FLUX.1-schnell}
+      - HF_FLUX_FN=${HF_FLUX_FN:-/infer}
+      - HF_3D_SPACE=${HF_3D_SPACE:-TencentARC/InstantMesh}
+      - HF_SF3D_SPACE=${HF_SF3D_SPACE:-stabilityai/stable-fast-3d}
+      - HF_SF3D_FN=${HF_SF3D_FN:-/run_button}
+      - FE_ORIGIN=http://localhost:${PORT_FE:-3000}
+    volumes:
+      - ./FE:/FE:ro
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-S", "http://localhost:8000/api/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
