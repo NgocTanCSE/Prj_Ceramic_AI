@@ -4,39 +4,187 @@ try { dotenv.config(); } catch (_) {}
 /**
  * aiService.js — AI backend adapter (strategy selector)
  *
- * Chọn backend AI phù hợp dựa trên env vars có sẵn:
- *   1. CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN → Cloudflare Workers AI (LLaMA)
- *   2. Rỗng → Curated Ceramic Intelligence (built-in rule engine)
- *
- * External LLM backends have been removed from the pipeline — only Cloudflare + rule engine.
- *
- * Xuất cùng interface: chatWithAdvisor, promptTo3DConcept, imageTo3DConcept
- * để server.js không cần thay đổi logic.
+ * Chọn backend AI phù hợp:
+ *   1. DEEPSEEK_API_KEY → DeepSeek Chat Completions (Primary)
+ *   2. CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN → Cloudflare Workers AI (LLaMA)
+ *   3. Rỗng → Thông báo trung thực chưa cấu hình API Key
  */
 
-// Import Cloudflare LLaMA backend
 import * as cloudflare from './cloudflareService.js';
 
-// Detect which backends are configured
-const hasCloudflare =
-  process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN;
+const hasDeepSeek = Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.trim() !== '');
+const hasCloudflare = Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN);
+
+const DEEPSEEK_SYSTEM_PROMPT = `Bạn là Trợ lý AI Chuyên viên Gốm Biên Hòa - Tân Vạn (Đồng Nai), một cố vấn nghệ nhân ảo đồng hành cùng khách hàng.
+Bạn am hiểu sâu sắc về:
+- Lịch sử gốm Biên Hòa - Tân Vạn, trường phái Bá Nghệ Biên Hòa 1903, triển lãm Paris 1925.
+- Các sắc men đặc trưng: Men Xanh Đồng Trổ (Vert de Biên Hòa, #2A6B5C), Men Đá Đỏ Bazan Bửu Long (#9E472A), Men Vàng Hoàng Yến (#C88A2E), Men Trắng Rạn Phù Sa (#DCD3C1).
+- Các dòng sản phẩm chính: Bình hoa (vase), Cốc uống nước (mug), Bát trà thiền (bowl), Đĩa mỹ nghệ (plate).
+- Kỹ thuật: Khắc chìm champlevé, chạm lộng, nung lò rồng củi ở nhiệt độ 1200°C - 1220°C, độ co ngót đất sét xám Tân Vạn từ 9% đến 11%, độ dày thành gốm tiêu chuẩn 5-7mm.
+- Dịch vụ: Workshop tự tay làm gốm tại Tân Vạn và Đặt lịch tham quan ngắm mẫu tại showroom.
+
+QUY TẮC PHỤC VỤ VÀ GIAO TIẾP:
+1. Giao tiếp bằng tiếng Việt tự nhiên, ấm áp, nhã nhặn, tôn trọng khách hàng.
+2. Trả lời TRỰC TIẾP và CHÍNH XÁC câu hỏi của khách hàng trước, sau đó mới đưa ra gợi ý tiếp theo phù hợp. Không lặp lại đoạn giới thiệu lịch sử nếu khách không hỏi.
+3. Luôn nhận rõ mình là Trợ lý AI của Xưởng gốm, không giả vờ là con người bằng xương bằng thịt.
+4. Ghi nhớ ngữ cảnh trò chuyện nhiều lượt (multi-turn). Nếu khách hàng thay đổi ý định (ví dụ: đang nói về bình hoa 30cm nhưng chuyển sang muốn làm bát thiền 18cm men nâu), hãy cập nhật theo yêu cầu mới nhất, bỏ các thông số cũ không còn phù hợp.
+5. Khi khách hàng muốn đặt lịch:
+   - Phân biệt rõ giữa: (A) "Workshop làm gốm trải nghiệm" (tự tay vuốt đất, có nghệ nhân hướng dẫn) và (B) "Đặt lịch tham quan xem mẫu" (ngắm sản phẩm, tư vấn không gian).
+   - Hỏi các thông tin cần thiết: Ngày dự kiến, số lượng khách, ca sáng hay chiều. Nếu chưa có thông tin, hãy hỏi khéo léo và hướng dẫn khách mở trang Đặt lịch để xem các ca còn trống.
+6. Khi khách hỏi về giá hoặc lịch trống:
+   - Trả lời trung thực: nêu mức giá tham khảo (ví dụ: workshop trải nghiệm tham khảo khoảng 250.000đ/người, sản phẩm chế tác từ 180.000đ - 350.000đ tùy mẫu), nói rõ giá chính thức và slot trống sẽ được nhân viên xưởng xác nhận theo biểu mẫu thực tế.
+7. Khi khách nhắc đến "lá cờ Việt Nam": hiểu đúng là quốc kỳ cờ đỏ sao vàng (dùng men đỏ thẫm/đá đỏ bazan làm nền và men vàng hoàng yến khắc sao vàng), không nhầm lẫn sang lá cây thông thường.
+8. Khi khách chỉ hỏi kỹ thuật (như nhiệt độ nung, độ co ngót, cách bảo quản), hãy trả lời súc tích đúng trọng tâm, tôn trọng lệnh của khách, không ép mua hàng.
+9. ĐỊNH DẠNG PHẢN HỒI BẮT BUỘC (JSON DUY NHẤT):
+{
+  "reply": "Nội dung câu trả lời bằng tiếng Việt",
+  "suggestions": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"],
+  "spec": {
+    "ready": true,
+    "archetype": "vase",
+    "archetypeName": "Bình hoa",
+    "heightCm": 25,
+    "diameterCm": 12,
+    "glazeName": "Men Xanh Đồng Trổ (Vert de Biên Hòa)",
+    "glazeHex": "#2A6B5C",
+    "pattern": "cuc_day",
+    "customText": ""
+  },
+  "booking": {
+    "ready": false,
+    "type": "workshop",
+    "partySize": 2,
+    "preferredDate": "",
+    "timeSlot": ""
+  }
+}`;
 
 /**
- * 0. Chat Advisor — Cloudflare LLaMA → rule engine fallback
+ * Gọi DeepSeek Chat API
  */
-export async function chatWithAdvisor(message = '', history = []) {
-  // 1. Try Cloudflare LLaMA first
-  if (hasCloudflare) {
-    const reply = await cloudflare.chatWithAdvisor(message, history);
-    if (reply && reply.success) return reply;
+async function callDeepSeekChat(message, history = []) {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+
+  const formattedMessages = [
+    { role: 'system', content: DEEPSEEK_SYSTEM_PROMPT },
+  ];
+
+  if (Array.isArray(history)) {
+    const sanitized = history
+      .slice(-12)
+      .map((h) => {
+        if (!h) return null;
+        const role = h.role === 'user' || h.sender === 'user' ? 'user' : 'assistant';
+        const content = (h.content || h.text || '').toString().trim();
+        return content ? { role, content } : null;
+      })
+      .filter(Boolean);
+    formattedMessages.push(...sanitized);
   }
 
-  // 2. Built-in Ceramic Knowledge Engine (rule-based fallback)
-  return ceramicKnowledgeFallback(message);
+  formattedMessages.push({ role: 'user', content: message });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey.trim()}`,
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: formattedMessages,
+      temperature: 0.3,
+      max_tokens: 1024,
+      response_format: { type: 'json_object' },
+    }),
+    signal: controller.signal,
+  });
+
+  clearTimeout(timeout);
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`DeepSeek API error HTTP ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const rawContent = data.choices?.[0]?.message?.content || '';
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(rawContent);
+  } catch (_) {
+    const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try { parsed = JSON.parse(jsonMatch[1]); } catch (e2) {}
+    }
+  }
+
+  if (parsed && typeof parsed.reply === 'string') {
+    return {
+      success: true,
+      provider: 'deepseek',
+      model: data.model || model,
+      reply: parsed.reply,
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      spec: parsed.spec && parsed.spec.ready ? parsed.spec : null,
+      specReady: Boolean(parsed.spec && parsed.spec.ready),
+      booking: parsed.booking && parsed.booking.ready ? parsed.booking : null,
+    };
+  }
+
+  return {
+    success: true,
+    provider: 'deepseek',
+    model: data.model || model,
+    reply: rawContent || 'Tôi đã ghi nhận ý kiến của bạn.',
+    suggestions: ['Mở trong Xưởng 3D', 'Tư vấn men xanh đồng', 'Xem lịch workshop'],
+    specReady: false,
+  };
 }
 
 /**
- * 1. Prompt → 3D Concept — Cloudflare LLaMA → rule engine fallback
+ * 0. Chat Advisor — DeepSeek (Primary) → Cloudflare LLaMA → Honest status
+ */
+export async function chatWithAdvisor(message = '', history = []) {
+  if (hasDeepSeek) {
+    try {
+      return await callDeepSeekChat(message, history);
+    } catch (err) {
+      console.error('[AI Service] DeepSeek chat error:', err.message);
+    }
+  }
+
+  if (hasCloudflare) {
+    try {
+      const reply = await cloudflare.chatWithAdvisor(message, history);
+      if (reply && reply.success) return reply;
+    } catch (err) {
+      console.warn('[AI Service] Cloudflare chat error:', err.message);
+    }
+  }
+
+  // Báo trung thực khi chưa có API Key
+  return {
+    success: false,
+    provider: 'deepseek',
+    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    error: 'MISSING_API_KEY',
+    reply: 'Hệ thống AI chưa được kết nối với DeepSeek API Key. Quản trị viên vui lòng thiết lập biến môi trường DEEPSEEK_API_KEY để kích hoạt trợ lý đàm thoại thực tế.',
+    suggestions: [
+      'Tôi muốn tạo một chiếc bình hoa 30cm',
+      'Tư vấn men xanh đồng Vert de Biên Hòa',
+      'Tìm hiểu lịch mở xưởng gốm Tân Vạn',
+    ],
+  };
+}
+
+/**
+ * 1. Prompt → 3D Concept
  */
 export async function promptTo3DConcept(userPrompt) {
   if (hasCloudflare) {
@@ -47,13 +195,11 @@ export async function promptTo3DConcept(userPrompt) {
       console.warn('[AI Adapter] Cloudflare promptTo3DConcept error:', err.message);
     }
   }
-
-  // Cloudflare service already includes the rule-engine fallback when no keys
   return cloudflare.promptTo3DConcept(userPrompt);
 }
 
 /**
- * 2. Image → 3D Concept (vision) — Cloudflare LLaMA Vision → rule engine fallback
+ * 2. Image → 3D Concept (vision)
  */
 export async function imageTo3DConcept(imageBase64, userPrompt = '') {
   if (hasCloudflare) {
@@ -64,103 +210,26 @@ export async function imageTo3DConcept(imageBase64, userPrompt = '') {
       console.warn('[AI Adapter] Cloudflare imageTo3DConcept error:', err.message);
     }
   }
-
   return cloudflare.imageTo3DConcept(imageBase64, userPrompt);
 }
 
 /**
- * 3. Built-in rule engine fallback for chat (mirrors server.js logic)
- * Used when no AI API keys are configured.
- */
-function ceramicKnowledgeFallback(message = '') {
-  const userMsg = message.trim().toLowerCase();
-
-  const replies = {
-    greeting: {
-      reply: `Kính chào bạn! Tôi là Cụ Thành — Nghệ nhân làng gốm Tân Vạn, Biên Hòa. Rất vui được đồng hành cùng bạn trên hành trình tạo tác tác phẩm gốm mang dấu ấn riêng. Bạn đang ấp ủ làm một chiếc cốc khắc chìm, bình hoa chạm lộng hay muốn ghé thăm workshop nặn gốm tại Tân Vạn bên bờ sông Đồng Nai?`,
-      suggestions: ['Tư vấn men xanh đồng Vert de Biên Hòa', 'Kỹ thuật khắc chìm champlevé', 'Đặt lịch tham gia workshop'],
-    },
-    glaze: {
-      reply: `Trong nghệ thuật gốm Biên Hòa, màu men là kiệt tác danh tiếng thế giới!
-• **Men Xanh Đồng Trổ (Vert de Biên Hòa):** Màu men trứ danh đạt Huy chương Vàng Paris 1925, pha từ oxit đồng, tro rơm nếp và quặng đá ong, nung lò rồng ở 1220°C tỏa sắc xanh ngọc ánh đồng lộng lẫy.
-• **Men Đá Đỏ Bazan:** Nâu đỏ trầm ấm phong phó bìa từ đá ong Bửu Long và đất đỏ Đông Nam Bộ.
-• **Men Vàng Hoàng Yến & Xanh Lục Dưa Cải:** Các sắc men màu khảm đa sắc độc nhất vô nhị.
-Bạn có thể vào tab **'Xưởng 3D'** bên tay trái để thử nghiệm trực tiếp các sắc men này lên mô hình 360 độ nhé!`,
-      suggestions: ['Thử phối màu trong Xưởng 3D', 'Họa tiết hoa cúc dây đôn voi', 'Đặc trưng đất sét Tân Vạn'],
-    },
-    flagLeaf: {
-      reply: `À, bạn muốn in hình lá cờ Việt Nam à! Đây là thiết kế rất ý nghĩa. Để biểu trưng lá cờ (màu đỏ + sao vàng) lên gốm, tôi gợi ý:
-• **Men đỏ thẫm (bazan):** Làm nền đỏ tươi như nền cờ. Cần nung ở lớp dưới (1200°C) để men cứng bám.
-• **Men vàng hoàng yến:** Dùng kỹ thuật champaeve (khắc chìm) để tạo sao vàng nổi bật trên nền đỏ.
-• **Sản phẩm đề xuất:** Cốc (mug) size 300ml hoặc bát nhỏ — diện tích miệng rộng phù hợp để khắc chi tiết sao chép. Cốc cũng tiện dùng hàng ngày!
-• **Lưu ý:** Lá cờ không phải lá cây thường (sen, đào) — thiết kế cần đường viền sao tròn và màu đỏ chủ đạo.`,
-      suggestions: ['Xưởng 3D thiết kế cốc lá cờ', 'Đặt lịch workshop khắc chìm', 'Xem mẫu cốc men đỏ + vàng'],
-    },
-    plantLeaf: {
-      reply: `Lá cây Việt Nam (sen, đào, mai...) rất đẹp khi khắc lên gốm. Với lá sen, tôi gợi ý men xanh đồng Vert de Biên Hòa — màu xanh tươi mát mẻ như lá. Với lá đào, men đỏ thẫm hoặc men đá đỏ bazan sẽ nổi bật. Bát hoặc đĩa trang trí là lựa chọn lý tưởng vì diện tích rộng dễ khắc chi tiết lá. Bạn thử Xưởng 3D để mockup trước khi nung nhé!`,
-      suggestions: ['Xưởng 3D ngay', 'Đặt lịch workshop', 'Xem mẫu lá sen'],
-    },
-    productRec: {
-      reply: `Dựa trên nhu cầu của bạn, tôi đề xuất: nếu dùng hàng ngày → **cốc (mug)** — nhẹ, tiện cầm, dễ vệ sinh; để trang trí bàn thờ → **đĩa (plate)**; để bán hàng → **bát (bowl)**; để trưng diễn lâu dài → **bình (vase)**. Đối với họa tiết lá cờ Việt Nam, **cốc 300ml** là lựa chọn "vàng" — vừa tiện dùng, vừa đủ không gian khắc chìm chi tiết sao chép tròn vòng.`,
-      suggestions: ['Xưởng 3D thiết kế cốc', 'Đặt lịch workshop', 'So sánh mẫu sản phẩm'],
-    },
-    workshop: {
-      reply: `Trải nghiệm Workshop tại Tân Vạn (Biên Hòa, Đồng Nai) là cách tuyệt vời nhất để chạm vào linh hồn gốm đất phương Nam!
-Khi bạn thiết kế trước sản phẩm trên **Xưởng 3D** của chúng tôi, xưởng sẽ chuẩn bị sẵn phôi đất sét xám Tân Vạn, bộ dao trổ và men màu đúng theo ý bạn. Đến nơi, bạn sẽ được nghệ nhân kèm 1-on-1 để vuốt phôi, khắc chìm hoa văn và chấm men màu. Sau đó xưởng sẽ nung lò rồng củi và gửi thành phẩm đóng hộp về tận nhà bạn!`,
-      suggestions: ['Xem các ca workshop có sẵn', 'Thời gian nung lò rồng mất bao lâu?', 'Chi phí workshop một buổi'],
-    },
-    firing: {
-      reply: `Câu hỏi rất nhà nghề! Gốm Biên Hòa là sự kết hợp giữa bàn tay tạo hình và ngọn lửa lò rồng (lò bầu dốc thoải dài theo triền sông). Đất sét xám Tân Vạn sau khi vuốt và khắc chìm sẽ co ngót khoảng 9% đến 11% khi nung lò rồng ở nhiệt độ 1200°C - 1220°C.
-Vì vậy, khi tạo hình, nghệ nhân luôn khuyên bạn giữ độ dày thành sản phẩm từ 5-7mm để các nét khắc chìm không làm mỏng vách gốm gây nứt vỡ.`,
-      suggestions: ['Kiểm tra độ khả thi ý tưởng', 'Vào Xưởng 3D để tạo mẫu', 'Kỹ thuật khắc chìm champlevé'],
-    },
-    price: {
-      reply: `Về chi phí, mô hình xưởng gốm Biên Hòa có 2 gói dịch vụ rất minh bạch:
-1. **Nghệ nhân Biên Hòa chế tác & Giao tận nhà:** Từ 180.000đ - 350.000đ/sản phẩm (tùy phôi cốc, bình hoa hay đĩa và độ phức tạp của hoa văn khắc chìm).
-2. **Đặt lịch Workshop tự tay làm:** 250.000đ/người (bao gồm trọn gói đất sét Tân Vạn, dao trổ khắc, màu men Vert de Biên Hòa, nghệ nhân kèm riêng và phí nung lò rồng củi).`,
-      suggestions: ['Thiết kế mẫu ngay', 'Xem giỏ hàng', 'Tư vấn ý tưởng độc lạ'],
-    },
-    default: {
-      reply: `Ý tưởng của bạn rất tuyệt vời! Để hiện thực hóa tốt nhất, bạn có thể nhập mô tả vào mục **'AI Tư vấn'** ở thanh menu trái để hệ thống phác họa 6 mặt vector, sau đó đưa thẳng vào **'Xưởng 3D'** để thử màu men Vert de Biên Hòa và hoa văn khắc chìm nhé. Nếu cần mẹo gì về kỹ thuật nặn đất hay phối men màu, cứ hỏi tôi bất kỳ lúc nào!`,
-      suggestions: ['Mở AI Tư vấn 6 mặt', 'Vào Xưởng 3D', 'Xem thư viện mẫu gốm'],
-    },
-  };
-
-  let chosen;
-  if (userMsg.includes('lá cờ') || userMsg.includes('cờ việt') || userMsg.includes('quốc kỳ')) {
-    chosen = replies.flagLeaf;
-  } else if (userMsg.includes('lá cây') || userMsg.includes('lá sen') || userMsg.includes('lá đào') || userMsg.includes('lá việt')) {
-    chosen = replies.plantLeaf;
-  } else if (userMsg.includes('chọn sản phẩm') || userMsg.includes('nên chọn') || userMsg.includes('sản phẩm nào') || userMsg.includes('đề xuất') || userMsg.includes('hàng ngày') || userMsg.includes('dùng thường xuyên')) {
-    chosen = replies.productRec;
-  } else if (userMsg.includes('chào') || userMsg.includes('hello') || userMsg.includes('hi')) {
-    chosen = replies.greeting;
-  } else if (userMsg.includes('men') || userMsg.includes('màu') || userMsg.includes('đồng') || userMsg.includes('đá đỏ') || userMsg.includes('vert')) {
-    chosen = replies.glaze;
-  } else if (userMsg.includes('workshop') || userMsg.includes('học') || userMsg.includes('trải nghiệm') || userMsg.includes('đến làng') || userMsg.includes('tân vạn')) {
-    chosen = replies.workshop;
-  } else if (userMsg.includes('nung') || userMsg.includes('nhiệt độ') || userMsg.includes('co ngót') || userMsg.includes('vỡ') || userMsg.includes('lò rồng')) {
-    chosen = replies.firing;
-  } else if (userMsg.includes('giá') || userMsg.includes('chi phí') || userMsg.includes('tiền') || userMsg.includes('đắt')) {
-    chosen = replies.price;
-  } else {
-    chosen = replies.default;
-  }
-
-  return {
-    success: true,
-    reply: chosen.reply,
-    suggestions: chosen.suggestions,
-    source: 'ceramic-knowledge-engine',
-  };
-}
-
-/**
- * Trả về trạng thái cấu hình — dùng cho health check
+ * Trạng thái cấu hình phục vụ health check
  */
 export function getAiBackendStatus() {
+  if (hasDeepSeek) {
+    return {
+      provider: 'deepseek',
+      model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+      configured: true,
+    };
+  }
   if (hasCloudflare) {
     return cloudflare.getAiBackendStatus();
   }
-  return { provider: 'ceramic-intelligence-fallback', model: 'rule-engine', configured: false };
+  return {
+    provider: 'deepseek',
+    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    configured: false,
+  };
 }

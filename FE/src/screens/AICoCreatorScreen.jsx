@@ -644,13 +644,13 @@ export default function AICoCreatorScreen({
             </div>
           )}
 
-          {/* NẾU ĐANG CHỜ XÁC NHẬN ĐẶC TẢ: Hiển thị Thẻ Review Đặc Tả Kỹ Thuật */}
+          {/* NẾU ĐANG CHỜ XÁC NHẬN ĐẶC TẢ: Hiển thị Thẻ Review Đặc Tả Kỹ Thuật (Mobile & iPhone Optimized) */}
           {specDraft && (creatorState === 'AWAITING_CONFIRMATION' || creatorState === 'EDITING_SPEC') && !isLoading && (
-            <div className="w-full max-w-xl bg-ceramic-paper rounded-3xl border border-ceramic-border p-6 shadow-card space-y-5 animate-scale-in">
-              <div className="flex items-center justify-between border-b border-ceramic-border/60 pb-3">
+            <div className="w-full max-w-xl mx-auto bg-ceramic-paper rounded-2xl sm:rounded-3xl border border-ceramic-border p-4 sm:p-6 shadow-card space-y-4 sm:space-y-5 animate-scale-in max-h-[85vh] sm:max-h-none overflow-y-auto sm:overflow-visible overflow-x-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-ceramic-border/60 pb-3 gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-ceramic-terracotta animate-pulse" />
-                  <h3 className="font-editorial text-lg font-bold text-ceramic-charcoal">
+                  <span className="w-2.5 h-2.5 rounded-full bg-ceramic-terracotta animate-pulse flex-shrink-0" />
+                  <h3 className="font-editorial text-base sm:text-lg font-bold text-ceramic-charcoal leading-snug">
                     Bản Đặc Tả Thiết Kế Trước Khi Tạo 3D
                   </h3>
                 </div>
@@ -660,25 +660,25 @@ export default function AICoCreatorScreen({
                     setSpecDraft(null);
                     setCreatorState('IDLE');
                   }}
-                  className="text-xs font-mono text-ceramic-slate hover:text-ceramic-charcoal cursor-pointer"
+                  className="text-xs font-mono text-ceramic-slate hover:text-ceramic-charcoal cursor-pointer self-end sm:self-auto min-h-[36px] flex items-center px-2 py-1 rounded hover:bg-ceramic-cream transition-colors"
                 >
                   ✕ Hủy & Nhập lại
                 </button>
               </div>
 
-              <p className="text-xs text-ceramic-slate leading-relaxed">
+              <p className="text-xs text-ceramic-slate leading-relaxed break-words">
                 Dựa trên ý tưởng: <strong className="text-ceramic-charcoal font-semibold">"{specDraft.prompt}"</strong>, AI đã tổng hợp các thông số kỹ thuật chế tác sau:
               </p>
 
               {/* Thông số chi tiết */}
-              <div className="space-y-3.5 text-xs font-mono bg-ceramic-cream/50 p-4 rounded-2xl border border-ceramic-border">
+              <div className="space-y-3.5 text-xs font-mono bg-ceramic-cream/50 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-ceramic-border">
                 {/* 1. Dáng sản phẩm */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center text-ceramic-slate">
                     <span>1. LOẠI SẢN PHẨM:</span>
                     <span className="font-bold text-ceramic-charcoal uppercase">{specDraft.archetype}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
                     {[
                       { id: 'vase', label: 'Bình hoa' },
                       { id: 'mug', label: 'Cốc gốm' },
@@ -689,7 +689,7 @@ export default function AICoCreatorScreen({
                         key={item.id}
                         type="button"
                         onClick={() => setSpecDraft(prev => ({ ...prev, archetype: item.id }))}
-                        className={`px-3 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                        className={`px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-[36px] flex items-center justify-center rounded-lg border text-xs sm:text-[11px] transition-colors cursor-pointer ${
                           specDraft.archetype === item.id
                             ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
                             : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
@@ -707,13 +707,13 @@ export default function AICoCreatorScreen({
                     <span>2. CHIỀU CAO THIẾT KẾ:</span>
                     <span className="font-bold text-ceramic-terracotta">{specDraft.height} cm</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                     {[18, 22, 25, 30].map((h) => (
                       <button
                         key={h}
                         type="button"
                         onClick={() => setSpecDraft(prev => ({ ...prev, height: h }))}
-                        className={`flex-1 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                        className={`py-2 sm:py-1.5 min-h-[44px] sm:min-h-[36px] flex items-center justify-center rounded-lg border text-xs sm:text-[11px] transition-colors cursor-pointer ${
                           specDraft.height === h
                             ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
                             : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
@@ -727,11 +727,11 @@ export default function AICoCreatorScreen({
 
                 {/* 3. Màu men truyền thống */}
                 <div className="space-y-1.5 pt-2 border-t border-ceramic-border/50">
-                  <div className="flex justify-between items-center text-ceramic-slate">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 text-ceramic-slate">
                     <span>3. MEN GỐM NUNG LÒ RỒNG:</span>
-                    <span className="font-bold text-ceramic-charcoal truncate max-w-[180px]">{specDraft.glazeName}</span>
+                    <span className="font-bold text-ceramic-charcoal truncate">{specDraft.glazeName}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
                     {[
                       { name: 'Men Xanh Đồng Trổ (Vert de Biên Hòa)', hex: '#2A6B5C', label: 'Xanh đồng' },
                       { name: 'Men Đá Đỏ Bazan Bửu Long', hex: '#9E472A', label: 'Đá đỏ' },
@@ -742,14 +742,14 @@ export default function AICoCreatorScreen({
                         key={g.hex}
                         type="button"
                         onClick={() => setSpecDraft(prev => ({ ...prev, glazeName: g.name, glazeHex: g.hex }))}
-                        className={`px-2.5 py-1 rounded-lg border text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        className={`px-2.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-lg border text-xs sm:text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer ${
                           specDraft.glazeHex === g.hex
                             ? 'bg-ceramic-charcoal text-ceramic-paper border-ceramic-charcoal font-semibold shadow-paper'
                             : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
                         }`}
                       >
-                        <span className="w-2.5 h-2.5 rounded-full inline-block border border-ceramic-border" style={{ backgroundColor: g.hex }} />
-                        <span>{g.label}</span>
+                        <span className="w-3 h-3 rounded-full inline-block border border-ceramic-border flex-shrink-0" style={{ backgroundColor: g.hex }} />
+                        <span className="truncate">{g.label}</span>
                       </button>
                     ))}
                   </div>
@@ -761,7 +761,7 @@ export default function AICoCreatorScreen({
                     <span>4. HỌA TIẾT CHẾ TÁC:</span>
                     <span className="font-bold text-ceramic-charcoal">{specDraft.pattern || 'Hoa cúc dây'}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
                     {[
                       { id: 'cuc_day', label: 'Hoa cúc dây 1925' },
                       { id: 'sen_co', label: 'Hoa sen cổ' },
@@ -772,7 +772,7 @@ export default function AICoCreatorScreen({
                         key={p.id}
                         type="button"
                         onClick={() => setSpecDraft(prev => ({ ...prev, pattern: p.id }))}
-                        className={`px-2.5 py-1 rounded-lg border text-[11px] transition-colors cursor-pointer ${
+                        className={`px-2.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-[36px] rounded-lg border text-xs sm:text-[11px] flex items-center justify-center transition-colors cursor-pointer ${
                           specDraft.pattern === p.id
                             ? 'bg-ceramic-terracotta text-ceramic-paper border-ceramic-terracotta font-semibold'
                             : 'bg-ceramic-paper text-ceramic-slate border-ceramic-border hover:border-ceramic-charcoal'
@@ -785,10 +785,10 @@ export default function AICoCreatorScreen({
                 </div>
 
                 {/* 5. Tiêu chuẩn xưởng Tân Vạn */}
-                <div className="pt-2 border-t border-ceramic-border/50 grid grid-cols-2 gap-2 text-[10.5px] text-ceramic-slate">
+                <div className="pt-2 border-t border-ceramic-border/50 grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-[11px] text-ceramic-slate">
                   <div>Thành gốm: <strong className="text-ceramic-charcoal">{specDraft.wallThickness}</strong></div>
                   <div>Độ co ngót bù trừ: <strong className="text-ceramic-terracotta">{specDraft.shrinkage}</strong></div>
-                  <div className="col-span-2">Nhiệt độ nung: <strong className="text-ceramic-charcoal">{specDraft.firingTemp}</strong></div>
+                  <div className="sm:col-span-2">Nhiệt độ nung: <strong className="text-ceramic-charcoal">{specDraft.firingTemp}</strong></div>
                 </div>
               </div>
 
@@ -797,7 +797,7 @@ export default function AICoCreatorScreen({
                 <div className="text-xs font-body text-ceramic-charcoal text-center italic">
                   "Bạn có muốn tôi tạo mô hình 3D theo thông số này không?"
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                   <Button
                     variant="secondary"
                     size="md"
@@ -805,6 +805,7 @@ export default function AICoCreatorScreen({
                       setSpecDraft(null);
                       setCreatorState('IDLE');
                     }}
+                    className="w-full min-h-[44px] flex items-center justify-center text-xs font-mono"
                   >
                     ✕ Hủy bỏ
                   </Button>
@@ -812,7 +813,7 @@ export default function AICoCreatorScreen({
                     variant="primary"
                     size="md"
                     onClick={handleConfirmAndGenerate}
-                    className="bg-ceramic-terracotta hover:bg-ceramic-charcoal text-ceramic-paper font-semibold shadow-paper"
+                    className="w-full min-h-[44px] bg-ceramic-terracotta hover:bg-ceramic-charcoal text-ceramic-paper font-semibold shadow-paper flex items-center justify-center text-xs sm:text-sm"
                   >
                     ✓ Tạo mô hình 3D ngay
                   </Button>
