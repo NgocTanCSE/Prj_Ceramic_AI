@@ -20,7 +20,7 @@
  */
 import { PNG } from 'pngjs';
 import * as jpeg from 'jpeg-js';
-import { imageToLathePoints, buildObjectMask, maskAndBbox } from '../../AI/lathe.js';
+import { imageToLathePoints, buildObjectMask, maskAndBbox, silhouetteToLathePoints, resizeLetterboxRgba } from '../../AI/lathe.js';
 
 const EDIT_MODEL = '@cf/black-forest-labs/flux-2-klein-4b';
 
@@ -90,24 +90,46 @@ export default {
       try {
         const body = await req.json();
         if (!body || body.imageBase64 == null) return json({ error: 'body.imageBase64 là bắt buộc' }, 400);
-        const { width, height, data } = decodeImage(body.imageBase64);
-        const rgba = getRgba(data, width, height);
-        // Nếu có mask truyền riêng (bg-removed mask), merge vào để đảm bảo chuẩn; nếu không dùng buildObjectMask nội bộ.
-        let result = imageToLathePoints(rgba, width, height, {
-          modelType: body.modelType || 'bowl',
-          mugPoints: body.mugPoints,
-          NORM: Number(env.NORM) || 750,
-        });
-        if (body.maskBase64) {
-          // Ghi đè: dùng mask thủ công nếu caller cung cấp (ví dụ từ FE segmentation riêng).
-          const m = decodeImage(body.maskBase64);
-          const mask = buildObjectMask(getRgba(m.data, m.width, m.height), m.width, m.height);
-          // resize mask về NORM nếu khác kích thước (giản lược: chỉ xử lý khi bằng NORM)
-          if (m.width === (result.NORM || 750)) {
-            const bbox = maskAndBbox(getRgba(m.data, m.width, m.height), m.width, m.height);
-            result = { ...result, objectCount: 0 };
-          }
+        if (typeof body.imageBase64 === 'string' && body.imageBase64.length > 20_000_000) {
+          return json({ error: 'Kích thước ảnh quá lớn (vượt quá giới hạn 15MB)' }, 400);
         }
+
+        const normSize = Number(env.NORM) || 750;
+        let result;
+
+        if (body.maskBase64) {
+          // Khi caller cung cấp mask riêng (tách nền từ client/segmentation)
+          const m = decodeImage(body.maskBase64);
+          const mRgba = getRgba(m.data, m.width, m.height);
+          const { rgba: normMaskRgba } = resizeLetterboxRgba(mRgba, m.width, m.height, normSize);
+          const bbox = maskAndBbox(normMaskRgba, normSize, normSize);
+
+          if (bbox.empty) {
+            result = {
+              lathePoints: [],
+              modelType: body.modelType || 'bowl',
+              outerCurve: [],
+              objectCount: 0,
+              areaRatio: 0,
+              empty: true,
+            };
+          } else {
+            result = silhouetteToLathePoints(bbox.mask, normSize, normSize, bbox, {
+              modelType: body.modelType || 'bowl',
+              mugPoints: body.mugPoints,
+            });
+          }
+        } else {
+          // Dùng ảnh nguồn: decode và tự động trích xuất mask + silhouette
+          const { width, height, data } = decodeImage(body.imageBase64);
+          const rgba = getRgba(data, width, height);
+          result = imageToLathePoints(rgba, width, height, {
+            modelType: body.modelType || 'bowl',
+            mugPoints: body.mugPoints,
+            NORM: normSize,
+          });
+        }
+
         return json({
           success: true,
           modelType: result.modelType,

@@ -54,6 +54,17 @@ export async function callSpace(spaceId, fn, args, options = {}) {
 /** Download binary (glb/png) về Buffer để lưu local. */
 export async function fetchBuffer(url, { timeoutMs } = {}) {
   try {
+    if (!url || typeof url !== 'string') {
+      return { ok: false, data: null, error: 'URL không hợp lệ' };
+    }
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { ok: false, data: null, error: 'Chỉ chấp nhận HTTP/HTTPS URL' };
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (host === '169.254.169.254' || host === 'metadata.google.internal' || host === 'instance-data') {
+      return { ok: false, data: null, error: 'Truy cập URL bị từ chối vì lý do bảo mật' };
+    }
     const controller = new AbortController();
     const t = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
     const res = await fetch(url, { signal: controller.signal });

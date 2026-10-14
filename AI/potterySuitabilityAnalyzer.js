@@ -123,7 +123,7 @@ function _connectedComponentAreas(mask, w, h, minArea) {
       const cx = qx[head]; const cy = qy[head]; head++; area++;
       for (let d = 0; d < 4; d++) {
         const nx = cx + DIRS[d][0]; const ny = cy + DIRS[d][1];
-        if (nx < 0 || ny < 0 || nx >= w || ny >= w) continue;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
         const ni = ny * w + nx;
         if (mask[ni] && !visited[ni]) { visited[ni] = 1; qx[tail] = nx; qy[tail] = ny; tail++; }
       }

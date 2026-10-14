@@ -464,26 +464,71 @@ function sanitizeConcept(raw, defaultTitle = 'Tác Phẩm Gốm') {
   const validPatterns = ['sen_co', 'dong_son', 'ca_chep', 'cham_bi', 'hoa_dao', 'none'];
   const pattern = validPatterns.includes(raw.pattern) ? raw.pattern : 'none';
 
-  // Collect parametric shape params (new schema) — pass through for FE lathePoints generation
-  const shapeParams = (raw.shapeParams && typeof raw.shapeParams === 'object') ? raw.shapeParams : null;
+  // Collect parametric shape params with strict numeric validation & clamping
+  let shapeParams = null;
+  if (raw.shapeParams && typeof raw.shapeParams === 'object') {
+    const sp = raw.shapeParams;
+    const defaultH = modelType === 'plate' ? 4 : (modelType === 'bowl' ? 8 : (modelType === 'mug' ? 12 : 22));
+    const defaultR = modelType === 'plate' ? 14 : (modelType === 'bowl' ? 10 : 8);
+
+    const hNum = Number(sp.height);
+    const rNum = Number(sp.maxRadius);
+    const nNum = Number(sp.neckRatio);
+    const fNum = Number(sp.rimFlare);
+    const bNum = Number(sp.baseRadius);
+
+    const height = Number.isFinite(hNum) && hNum > 0 ? Math.min(100, Math.max(2, hNum)) : defaultH;
+    const maxRadius = Number.isFinite(rNum) && rNum > 0 ? Math.min(60, Math.max(1, rNum)) : defaultR;
+    const neckRatio = Number.isFinite(nNum) ? Math.min(1.5, Math.max(0.1, nNum)) : 0.5;
+    const rimFlare = Number.isFinite(fNum) ? Math.min(2.5, Math.max(0.2, fNum)) : 0.8;
+    const baseRadius = Number.isFinite(bNum) ? Math.min(1.5, Math.max(0.1, bNum)) : 0.45;
+    const validCurvatures = ['straight', 'convex', 'concave', 'bulbous', 'waisted'];
+    const curvature = validCurvatures.includes(sp.curvature) ? sp.curvature : 'bulbous';
+
+    shapeParams = {
+      height,
+      maxRadius,
+      neckRatio,
+      rimFlare,
+      baseRadius,
+      curvature,
+    };
+  }
+
+  // Validate lathePoints coordinates (finite, non-negative radius) if returned
+  let validLathePoints = null;
+  if (Array.isArray(raw.lathePoints) && raw.lathePoints.length >= 8) {
+    const allFinite = raw.lathePoints.every(
+      (p) => p && typeof p === 'object' && Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)) && Number(p.x) >= 0
+    );
+    if (allFinite) {
+      validLathePoints = raw.lathePoints.map((p) => ({ x: Number(Number(p.x).toFixed(3)), y: Number(Number(p.y).toFixed(3)) }));
+    }
+  }
+
+  // Sanitize glaze hex & roughness
+  const rawHex = typeof raw.suggestedGlaze?.hex === 'string' ? raw.suggestedGlaze.hex.trim() : '';
+  const safeHex = /^#[0-9a-fA-F]{6}$/.test(rawHex) ? rawHex : '#2A6B5C';
+  const rawRough = Number(raw.suggestedGlaze?.roughness);
+  const safeRoughness = Number.isFinite(rawRough) ? Math.min(0.95, Math.max(0.05, rawRough)) : 0.15;
 
   return {
     success: true,
     engine: CF_MODEL ? `cloudflare-${CF_MODEL}` : 'ceramic-intelligence-fallback',
-    title: raw.title || defaultTitle || 'Tiêu Bản Gốm Sứ',
+    title: (raw.title && typeof raw.title === 'string') ? raw.title.slice(0, 100) : (defaultTitle || 'Tiêu Bản Gốm Sứ'),
     modelType,
     archetype: modelType, // alias for FE compatibility
-    dimensions: raw.dimensions || 'Cao 20cm × ĐK bụng 13cm',
+    dimensions: (raw.dimensions && typeof raw.dimensions === 'string') ? raw.dimensions.slice(0, 100) : 'Cao 20cm × ĐK bụng 13cm',
     shapeParams,
     suggestedGlaze: {
-      hex: raw.suggestedGlaze?.hex || '#2A6B5C',
-      name: raw.suggestedGlaze?.name || 'Men Xanh Đồng Trổ',
-      roughness: Number(raw.suggestedGlaze?.roughness || 0.15)
+      hex: safeHex,
+      name: (raw.suggestedGlaze?.name && typeof raw.suggestedGlaze.name === 'string') ? raw.suggestedGlaze.name.slice(0, 80) : 'Men Xanh Đồng Trổ',
+      roughness: safeRoughness
     },
     pattern,
-    customText: raw.customText || '',
-    story: raw.story || 'Tác phẩm được định hình theo tinh hoa mỹ nghệ gốm Biên Hòa 1903.',
-    lathePoints: Array.isArray(raw.lathePoints) && raw.lathePoints.length >= 8 ? raw.lathePoints : null
+    customText: (raw.customText && typeof raw.customText === 'string') ? raw.customText.slice(0, 100) : '',
+    story: (raw.story && typeof raw.story === 'string') ? raw.story.slice(0, 300) : 'Tác phẩm được định hình theo tinh hoa mỹ nghệ gốm Biên Hòa 1903.',
+    lathePoints: validLathePoints
   };
 }
 

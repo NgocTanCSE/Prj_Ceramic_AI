@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
@@ -308,7 +309,7 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
 
     if (imageBase64) {
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      tempFilePath = path.resolve(`/tmp/sketch_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
+      tempFilePath = path.join(os.tmpdir(), `sketch_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
       fs.writeFileSync(tempFilePath, Buffer.from(base64Data, 'base64'));
       targetFilePath = tempFilePath;
     } else if (fallbackPath) {
@@ -435,20 +436,31 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
     // Helper: tính mask vật thể + bounding box từ raw RGBA (ngưỡng >30 loại pixel xám viền lem)
     const maskAndBbox = (raw, pw, ph) => {
       const mask = new Uint8Array(pw * ph);
-      let minX = pw, maxX = 0, minY = ph, maxY = 0;
+      let minX = pw, maxX = -1, minY = ph, maxY = -1;
+      let area = 0;
       for (let y = 0; y < ph; y++) {
+        const rowOffset = y * pw;
         for (let x = 0; x < pw; x++) {
-          const i = y * pw + x;
+          const i = rowOffset + x;
           const idx = i * 4;
+          const a = raw[idx + 3];
+          if (a <= 30) continue;
           const cd = Math.abs(raw[idx] - bgR) + Math.abs(raw[idx + 1] - bgG) + Math.abs(raw[idx + 2] - bgB);
-          if (raw[idx + 3] > 30 && cd > 30) {
+          if (cd > 30) {
             mask[i] = 1;
-            if (x < minX) minX = x; if (x > maxX) maxX = x;
-            if (y < minY) minY = y; if (y > maxY) maxY = y;
+            area++;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
           }
         }
       }
-      return { mask, minX, maxX, minY, maxY, cx: (minX + maxX) / 2, objW: Math.max(1, maxX - minX), objH: Math.max(1, maxY - minY) };
+      const empty = area === 0 || maxX < minX || maxY < minY;
+      if (empty) {
+        return { mask, minX: 0, maxX: 0, minY: 0, maxY: 0, cx: pw / 2, objW: 0, objH: 0, area: 0, empty: true };
+      }
+      return { mask, minX, maxX, minY, maxY, cx: (minX + maxX) / 2, objW: maxX - minX + 1, objH: maxY - minY + 1, area, empty: false };
     };
 
     let { data: baseRaw, info: baseInfo } = await sharp(cleanedBuffer)
@@ -502,10 +514,12 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
       ({ mask: isObject, minX, maxX, minY, maxY, cx, objW, objH } = b2);
     }
 
-    // 2.1 TRÍCH XUẤT ĐƯỜNG BIÊN 3D TRÒN XOAY TỪ ẢNH 2D (2D Silhouette to 3D Lathe Geometry)
-    // Phase 2: tăng mẫu 24→60 + làm mượt Douglas-Peucker để giảm "đường tiết diện vỡ"
-    const numSamples = 60;
-    const outerCurveRaw = [];
+    let lathePoints = [];
+    if (hasObj && maxY > minY && maxX > minX) {
+      // 2.1 TRÍCH XUẤT ĐƯỜNG BIÊN 3D TRÒN XOAY TỪ ẢNH 2D (2D Silhouette to 3D Lathe Geometry)
+      // Phase 2: tăng mẫu 24→60 + làm mượt Douglas-Peucker để giảm "đường tiết diện vỡ"
+      const numSamples = 60;
+      const outerCurveRaw = [];
     for (let i = 0; i <= numSamples; i++) {
       const sampleY = Math.round(maxY - (i / numSamples) * (maxY - minY));
       let left = cx;
@@ -649,7 +663,6 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
       ? outerCurve.slice(0, maxRIdx + 1)
       : outerCurve;
 
-    let lathePoints = [];
     if (cleanId === 'pottery-mug-001') {
       // Dáng Cốc Bầu Men Mộc 1:1 theo tiêu bản pottery-mug-001 mẫu chuẩn
       lathePoints = [
@@ -728,18 +741,20 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
 
       // Vành miệng bo tròn nhẹ
       const rimPoint = scaledCurve[scaledCurve.length - 1];
-      const wallThick = Math.max(0.08, rimPoint.r * 0.10);
+      const wallThick = Math.min(rimPoint.r * 0.25, Math.max(0.04, rimPoint.r * 0.10));
       lathePoints.push({ x: Math.max(0.04, Number((rimPoint.r - wallThick * 0.4).toFixed(3))), y: Number((rimPoint.y + 0.04).toFixed(3)) });
       lathePoints.push({ x: Math.max(0.04, Number((rimPoint.r - wallThick).toFixed(3))), y: rimPoint.y });
 
-      // Lòng trong khoét sâu xuống đáy
+      // Lòng trong khoét sâu xuống đáy (adaptive wall thickness)
       for (let i = scaledCurve.length - 2; i >= 1; i--) {
-        const inR = Math.max(0.04, scaledCurve[i].r - wallThick);
+        const localThick = Math.min(scaledCurve[i].r * 0.28, wallThick);
+        const inR = Math.max(0.04, scaledCurve[i].r - localThick);
         lathePoints.push({ x: Number(inR.toFixed(3)), y: Number((scaledCurve[i].y + 0.02).toFixed(3)) });
       }
       // Chạm đáy lòng trong
       lathePoints.push({ x: 0, y: Number((scaledCurve[0].y + 0.15).toFixed(3)) });
     }
+    } // end if (hasObj)
 
     // Hàm tạo nền Studio sạch phẳng #F8F7F4 (248, 247, 244)
     const createCleanStudioBuf = () => {
@@ -765,27 +780,29 @@ app.post('/api/ai/clean-and-deconstruct', async (req, res) => {
     const Rscale = PROF_N * 0.36;
     const Yscale = PROF_N * 0.4;
     const Yoff = PROF_N / 2;
-    const rimIdx = lathePoints.reduce((bi, p, i) => (p.x > lathePoints[bi].x ? i : bi), 1);
-    const outerPts = lathePoints.slice(1, Math.max(2, rimIdx + 1)); // đường thân ngoài: chân → vành miệng
-    const rowR = new Float64Array(PROF_N);
-    for (let i = 0; i < outerPts.length - 1; i++) {
-      const a = outerPts[i], b = outerPts[i + 1];
-      const ya = Math.max(0, Math.min(PROF_N - 1, Math.round(Yoff - a.y * Yscale)));
-      const yb = Math.max(0, Math.min(PROF_N - 1, Math.round(Yoff - b.y * Yscale)));
-      const lo = Math.min(ya, yb), hi = Math.max(ya, yb);
-      for (let y = lo; y <= hi; y++) {
-        const t = hi === lo ? 0 : (y - lo) / (hi - lo);
-        const r = a.x + t * (b.x - a.x);
-        if (r > rowR[y]) rowR[y] = r;
+    if (lathePoints.length >= 2) {
+      const rimIdx = lathePoints.reduce((bi, p, i) => (p.x > lathePoints[bi].x ? i : bi), 1);
+      const outerPts = lathePoints.slice(1, Math.max(2, rimIdx + 1)); // đường thân ngoài: chân → vành miệng
+      const rowR = new Float64Array(PROF_N);
+      for (let i = 0; i < outerPts.length - 1; i++) {
+        const a = outerPts[i], b = outerPts[i + 1];
+        const ya = Math.max(0, Math.min(PROF_N - 1, Math.round(Yoff - a.y * Yscale)));
+        const yb = Math.max(0, Math.min(PROF_N - 1, Math.round(Yoff - b.y * Yscale)));
+        const lo = Math.min(ya, yb), hi = Math.max(ya, yb);
+        for (let y = lo; y <= hi; y++) {
+          const t = hi === lo ? 0 : (y - lo) / (hi - lo);
+          const r = a.x + t * (b.x - a.x);
+          if (r > rowR[y]) rowR[y] = r;
+        }
       }
-    }
-    for (let y = 0; y < PROF_N; y++) {
-      const rPx = Math.round(rowR[y] * Rscale);
-      const xEnd = Math.min(PROF_N - 1, PCx + rPx);
-      for (let x = PCx; x <= xEnd; x++) {
-        const idx = (y * PROF_N + x) * 4;
-        profBg[idx] = dominantColor.r; profBg[idx + 1] = dominantColor.g;
-        profBg[idx + 2] = dominantColor.b; profBg[idx + 3] = 255;
+      for (let y = 0; y < PROF_N; y++) {
+        const rPx = Math.round(rowR[y] * Rscale);
+        const xEnd = Math.min(PROF_N - 1, PCx + rPx);
+        for (let x = PCx; x <= xEnd; x++) {
+          const idx = (y * PROF_N + x) * 4;
+          profBg[idx] = dominantColor.r; profBg[idx + 1] = dominantColor.g;
+          profBg[idx + 2] = dominantColor.b; profBg[idx + 3] = 255;
+        }
       }
     }
     const leftProfileBuf = await sharp(profBg, { raw: { width: PROF_N, height: PROF_N, channels: 4 } }).png().toBuffer();

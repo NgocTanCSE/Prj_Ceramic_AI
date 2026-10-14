@@ -31,13 +31,17 @@ const { r: bgR, g: bgG, b: bgB } = STUDIO_BG;
  * Dùng trong cả Worker (mask từ ảnh bg-removed) lẫn khi nền đã là Studio.
  */
 export function buildObjectMask(rgba, width, height, bg = STUDIO_BG) {
-  const mask = new Uint8Array(width * height);
+  const total = width * height;
+  const mask = new Uint8Array(total);
   const R = bg.r, G = bg.g, B = bg.b;
-  for (let i = 0; i < width * height; i++) {
+  for (let i = 0; i < total; i++) {
     const idx = i * 4;
-    const colorDist = Math.abs(rgba[idx] - R) + Math.abs(rgba[idx + 1] - G) + Math.abs(rgba[idx + 2] - B);
     const a = rgba[idx + 3];
-    mask[i] = a > ALPHA_THRESHOLD && colorDist > COLOR_DIST_THRESHOLD ? 1 : 0;
+    if (a <= ALPHA_THRESHOLD) continue;
+    const colorDist = Math.abs(rgba[idx] - R) + Math.abs(rgba[idx + 1] - G) + Math.abs(rgba[idx + 2] - B);
+    if (colorDist > COLOR_DIST_THRESHOLD) {
+      mask[i] = 1;
+    }
   }
   return mask;
 }
@@ -143,24 +147,61 @@ export function countConnectedComponents(mask, width, height, minArea = 32) {
 
 /**
  * Tính object mask + bounding box từ raw RGBA (được cắt/đưa về 750x750 trước đó).
- * Trả về { mask, minX, maxX, minY, maxY, cx, objW, objH }. (port từ server.js maskAndBbox)
+ * Trả về { mask, minX, maxX, minY, maxY, cx, objW, objH, area, empty }.
  */
 export function maskAndBbox(rgba, pw, ph) {
   const mask = new Uint8Array(pw * ph);
-  let minX = pw, maxX = 0, minY = ph, maxY = 0;
+  let minX = pw, maxX = -1, minY = ph, maxY = -1;
+  let area = 0;
   for (let y = 0; y < ph; y++) {
+    const rowOffset = y * pw;
     for (let x = 0; x < pw; x++) {
-      const i = y * pw + x;
+      const i = rowOffset + x;
       const idx = i * 4;
+      const a = rgba[idx + 3];
+      if (a <= ALPHA_THRESHOLD) continue;
       const cd = Math.abs(rgba[idx] - bgR) + Math.abs(rgba[idx + 1] - bgG) + Math.abs(rgba[idx + 2] - bgB);
-      if (rgba[idx + 3] > 30 && cd > 30) {
+      if (cd > COLOR_DIST_THRESHOLD) {
         mask[i] = 1;
-        if (x < minX) minX = x; if (x > maxX) maxX = x;
-        if (y < minY) minY = y; if (y > maxY) maxY = y;
+        area++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
       }
     }
   }
-  return { mask, minX, maxX, minY, maxY, cx: (minX + maxX) / 2, objW: Math.max(1, maxX - minX), objH: Math.max(1, maxY - minY) };
+
+  const empty = area === 0 || maxX < minX || maxY < minY;
+  if (empty) {
+    return {
+      mask,
+      minX: 0,
+      maxX: 0,
+      minY: 0,
+      maxY: 0,
+      cx: pw / 2,
+      objW: 0,
+      objH: 0,
+      area: 0,
+      empty: true,
+    };
+  }
+
+  const objW = maxX - minX + 1;
+  const objH = maxY - minY + 1;
+  return {
+    mask,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    cx: (minX + maxX) / 2,
+    objW,
+    objH,
+    area,
+    empty: false,
+  };
 }
 
 /**
@@ -190,24 +231,35 @@ export function silhouetteScanlines(mask, w, h) {
  */
 export function resizeLetterboxRgba(rgba, sw, sh, NORM = 750) {
   const scale = NORM / Math.max(sw, sh);
-  const tW = Math.max(1, Math.round(sw * scale));
-  const tH = Math.max(1, Math.round(sh * scale));
-  const offX = Math.round((NORM - tW) / 2);
-  const offY = Math.round((NORM - tH) / 2);
-  const out = new Uint8ClampedArray(NORM * NORM * 4);
-  // nền Studio
-  for (let i = 0; i < NORM * NORM; i++) {
-    const ii = i * 4; out[ii] = bgR; out[ii + 1] = bgG; out[ii + 2] = bgB; out[ii + 3] = 255;
+  const tW = Math.max(1, Math.min(NORM, Math.round(sw * scale)));
+  const tH = Math.max(1, Math.min(NORM, Math.round(sh * scale)));
+  const offX = Math.max(0, Math.round((NORM - tW) / 2));
+  const offY = Math.max(0, Math.round((NORM - tH) / 2));
+  const totalPx = NORM * NORM;
+  const out = new Uint8ClampedArray(totalPx * 4);
+
+  // Fast studio background fill via Uint32Array (4x faster)
+  const u32Out = new Uint32Array(out.buffer);
+  const bgPixel32 = (255 << 24) | (bgB << 16) | (bgG << 8) | bgR;
+  u32Out.fill(bgPixel32);
+
+  // Precompute source coordinate lookup tables (removes float division from inner loop)
+  const srcX = new Int32Array(tW);
+  for (let x = 0; x < tW; x++) {
+    srcX[x] = Math.min(sw - 1, Math.floor(x / scale));
   }
-  const sx = (x) => Math.floor(x / scale);
-  const sy = (y) => Math.floor(y / scale);
-  const sxMax = Math.min(sw - 1, Math.ceil((NORM - 2 * offX) / scale));
-  for (let y = 0; y < NORM; y++) {
-    const fy = Math.max(0, Math.min(sh - 1, sy(y - offY)));
-    for (let x = 0; x < NORM; x++) {
-      const fx = Math.max(0, Math.min(sw - 1, sx(x - offX)));
-      const si = (fy * sw + fx) * 4;
-      const di = (y * NORM + x) * 4;
+  const srcY = new Int32Array(tH);
+  for (let y = 0; y < tH; y++) {
+    srcY[y] = Math.min(sh - 1, Math.floor(y / scale));
+  }
+
+  // Copy target rectangle only (clean margins, zero edge-smear)
+  for (let y = 0; y < tH; y++) {
+    const rowSrc = srcY[y] * sw;
+    const rowDst = (offY + y) * NORM + offX;
+    for (let x = 0; x < tW; x++) {
+      const si = (rowSrc + srcX[x]) * 4;
+      const di = (rowDst + x) * 4;
       out[di] = rgba[si];
       out[di + 1] = rgba[si + 1];
       out[di + 2] = rgba[si + 2];
@@ -218,10 +270,58 @@ export function resizeLetterboxRgba(rgba, sw, sh, NORM = 750) {
 }
 
 /**
+ * Median filter 5-element sorting network for 1D arrays (fast, no allocation).
+ */
+export function medianFilter5(arr) {
+  const n = arr.length;
+  if (n < 3) return arr.slice();
+  const result = new Float64Array(n);
+  const win = new Float64Array(5);
+  for (let i = 0; i < n; i++) {
+    for (let j = -2; j <= 2; j++) {
+      const idx = Math.max(0, Math.min(n - 1, i + j));
+      win[j + 2] = arr[idx];
+    }
+    let a = win[0], b = win[1], c = win[2], d = win[3], e = win[4];
+    if (a > b) { const t = a; a = b; b = t; }
+    if (d > e) { const t = d; d = e; e = t; }
+    if (a > c) { const t = a; a = c; c = t; }
+    if (b > c) { const t = b; b = c; c = t; }
+    if (a > d) { const t = a; a = d; d = t; }
+    if (c > d) { const t = c; c = d; d = t; }
+    if (b > e) { const t = b; b = e; e = t; }
+    if (b > c) { const t = b; b = c; c = t; }
+    if (d > e) { const t = d; d = e; e = t; }
+    result[i] = c;
+  }
+  return Array.from(result);
+}
+
+/**
+ * Gaussian / Moving average filter (kernel=5, weights [1, 2, 3, 2, 1] / 9).
+ */
+export function gaussianSmooth5(arr) {
+  const n = arr.length;
+  if (n < 3) return arr.slice();
+  const result = new Float64Array(n);
+  const weights = [1, 2, 3, 2, 1];
+  const wSum = 9;
+  for (let i = 0; i < n; i++) {
+    let sum = 0;
+    for (let j = -2; j <= 2; j++) {
+      const idx = Math.max(0, Math.min(n - 1, i + j));
+      sum += arr[idx] * weights[j + 2];
+    }
+    result[i] = sum / wSum;
+  }
+  return Array.from(result);
+}
+
+/**
  * Douglas-Peucker 1D trên đường cong bán kính theo chiều cao Y.
  * Giảm "đường tiết diện vỡ" từ 60 mẫu → tập hợp điểm tối thiểu.
  */
-function douglasPeucker(pts, eps = 0.012) {
+export function douglasPeucker(pts, eps = 0.012) {
   if (pts.length < 3) return pts.slice();
   let maxIdx = 0, maxDist = 0;
   const first = pts[0], last = pts[pts.length - 1];
@@ -242,48 +342,138 @@ function douglasPeucker(pts, eps = 0.012) {
 }
 
 /**
+ * Catmull-Rom re-interpolation (resample đều theo Y để đảm bảo C² continuity, không giật cục bộ).
+ */
+export function catmullRomInterp(pts, targetCount = 18) {
+  if (!pts || pts.length === 0) return [];
+  const sorted = pts.slice().sort((a, b) => a.y - b.y);
+  const n = sorted.length;
+  if (n === 1) {
+    return Array.from({ length: targetCount }, () => ({ ...sorted[0] }));
+  }
+  if (n === 2) {
+    const [p0, p1] = sorted;
+    const res = [];
+    for (let i = 0; i < targetCount; i++) {
+      const t = i / (targetCount - 1);
+      res.push({
+        r: Number((p0.r + t * (p1.r - p0.r)).toFixed(3)),
+        y: Number((p0.y + t * (p1.y - p0.y)).toFixed(3)),
+      });
+    }
+    return res;
+  }
+  const minY = sorted[0].y;
+  const maxY = sorted[n - 1].y;
+  const ySpan = Math.max(1e-5, maxY - minY);
+  const result = [];
+
+  for (let i = 0; i < targetCount; i++) {
+    const t = i / (targetCount - 1);
+    const targetY = minY + t * ySpan;
+
+    let lo = 0;
+    for (let j = 0; j < n - 1; j++) {
+      if (sorted[j].y <= targetY && sorted[j + 1].y >= targetY) {
+        lo = j;
+        break;
+      }
+    }
+    const hi = lo + 1;
+    if (hi >= n) {
+      result.push({ r: sorted[n - 1].r, y: targetY });
+      continue;
+    }
+
+    const segLen = Math.abs(sorted[hi].y - sorted[lo].y) || 1e-6;
+    const alpha = Math.max(0, Math.min(1, (targetY - sorted[lo].y) / segLen));
+
+    const p0 = sorted[Math.max(0, lo - 1)];
+    const p1 = sorted[lo];
+    const p2 = sorted[hi];
+    const p3 = sorted[Math.min(n - 1, hi + 1)];
+
+    const t2 = alpha * alpha;
+    const t3 = t2 * alpha;
+    const r = 0.5 * (
+      2 * p1.r +
+      (-p0.r + p2.r) * alpha +
+      (2 * p0.r - 5 * p1.r + 4 * p2.r - p3.r) * t2 +
+      (-p0.r + 3 * p1.r - 3 * p2.r + p3.r) * t3
+    );
+    result.push({ r: Math.max(0.08, Number(r.toFixed(3))), y: Number(targetY.toFixed(3)) });
+  }
+
+  result[0] = { r: Number(sorted[0].r.toFixed(3)), y: Number(sorted[0].y.toFixed(3)) };
+  result[result.length - 1] = { r: Number(sorted[n - 1].r.toFixed(3)), y: Number(sorted[n - 1].y.toFixed(3)) };
+  return result;
+}
+
+/**
  * 2D Silhouette → 3D Lathe Geometry (solid of revolution) points.
- *
- * Port trực tiếp từ API/server.js 540-671 (phần pure-JS; bỏ qua phần render PNG 6-view
- * vì FE/CeramicCanvas3D + orthographicRenderer.js tự render 3D từ lathePoints).
+ * Đồng bộ với chuẩn hình học gốm sứ và tỷ lệ không bị bẹp dẹt.
  *
  * @param {Uint8Array} mask       — object mask (1 = vật thể), trên ảnh đã chuẩn NORM×NORM.
  * @param {number} w,h            — kích thước mask.
- * @param {{minX,maxX,minY,maxY,cx,objW,objH}} bbox — từ maskAndBbox.
+ * @param {{minX,maxX,minY,maxY,cx,objW,objH,empty}} bbox — từ maskAndBbox.
  * @param {object} opts
  * @param {('bowl'|'mug'|'plate'|'vase'|'vase-narrow-neck')} [opts.modelType]
  * @param {Array<{x,y}>} [opts.mugPoints] — nếu modelType==='mug' và truyền vào, dùng
  *        danh sách điểm này (chuẩn pottery-mug-001) thay vì tính từ silhouette.
- * @returns {{lathePoints:Array<{x,y}>, modelType, outerCurve:Array<{r,y}>, objectCount:number, areaRatio:number}}
+ * @returns {{lathePoints:Array<{x,y}>, modelType, outerCurve:Array<{r,y}>, objectCount:number, areaRatio:number, empty:boolean}}
  */
 export function silhouetteToLathePoints(mask, w, h, bbox, opts = {}) {
-  const { minX, maxX, minY, maxY, cx, objW, objH } = bbox;
   const modelType = opts.modelType || 'bowl';
+
+  // Guard: Empty image / empty mask check (P0 fix)
+  if (!bbox || bbox.empty || bbox.area === 0 || bbox.minX > bbox.maxX || bbox.minY > bbox.maxY || bbox.objW <= 2 || bbox.objH <= 2) {
+    return { lathePoints: [], modelType, outerCurve: [], objectCount: 0, areaRatio: 0, empty: true };
+  }
+
+  const { minX, maxX, minY, maxY, cx, objW, objH } = bbox;
   const isObject = mask;
 
-  // 2.1 Lấy mẫu silhouette 60 hàng (từ maxY xuống minY), mỗi hàng lấy left/right → (r = bán kính, y = tọa độ cao chuẩn hoá)
+  // Lấy mẫu silhouette 60 hàng từ maxY xuống minY
   const numSamples = 60;
   const outerCurveRaw = [];
+  const ySpanPx = Math.max(1, maxY - minY);
+  const safeObjH = Math.max(1, objH);
+
   for (let i = 0; i <= numSamples; i++) {
-    const sampleY = Math.round(maxY - (i / numSamples) * (maxY - minY));
+    const sampleY = Math.round(maxY - (i / numSamples) * ySpanPx);
+    const rowOffset = sampleY * w;
     let left = cx;
     let right = cx;
     for (let x = 0; x < w; x++) {
-      if (isObject[sampleY * w + x]) { left = x; break; }
+      if (isObject[rowOffset + x]) { left = x; break; }
     }
     for (let x = w - 1; x >= 0; x--) {
-      if (isObject[sampleY * w + x]) { right = x; break; }
+      if (isObject[rowOffset + x]) { right = x; break; }
     }
     const halfWidth = Math.max(2, (right - left) / 2);
-    const normY = Number((((maxY - sampleY) / objH) * 2.0 - 1.0).toFixed(3));
-    const normR = Number(((halfWidth / objH) * 1.5).toFixed(3));
+    const normY = Number((((maxY - sampleY) / safeObjH) * 2.0 - 1.0).toFixed(3));
+    const normR = Number(((halfWidth / safeObjH) * 1.5).toFixed(3));
     outerCurveRaw.push({ r: Math.max(0.08, normR), y: normY });
   }
 
-  // Douglas-Peucker làm mượt
-  const outerCurve = douglasPeucker(outerCurveRaw, 0.012);
+  // 1. Median filter (kernel=5) loại bỏ outlier pixel do bóng/họa tiết hoa văn
+  const rawRadii = outerCurveRaw.map((p) => p.r);
+  const medianRadii = medianFilter5(rawRadii);
 
-  // Điểm rộng nhất = vành miệng thực (mỗi hàng r cộng đồng)
+  // 2. Gaussian / Moving Average làm mượt biên
+  const smoothRadii = gaussianSmooth5(medianRadii);
+  const outerCurveFiltered = outerCurveRaw.map((p, i) => ({
+    r: Math.max(0.08, Number(smoothRadii[i].toFixed(3))),
+    y: p.y
+  }));
+
+  // 3. Douglas-Peucker simplification
+  const outerCurveDP = douglasPeucker(outerCurveFiltered, 0.012);
+
+  // 4. Catmull-Rom re-interpolation (18 points đều đặn, C² continuous)
+  const outerCurve = catmullRomInterp(outerCurveDP, 18);
+
+  // Điểm rộng nhất = vành miệng thực
   let maxRIdx = 0;
   for (let i = 0; i < outerCurve.length; i++) {
     if (outerCurve[i].r >= outerCurve[maxRIdx].r) maxRIdx = i;
@@ -297,51 +487,94 @@ export function silhouetteToLathePoints(mask, w, h, bbox, opts = {}) {
   // Đặc trưng cốc chuẩn pottery-mug-001 (tuỳ chọn)
   if (modelType === 'mug' && opts.mugPoints && Array.isArray(opts.mugPoints) && opts.mugPoints.length >= 10) {
     const lathePoints = opts.mugPoints.map((p) => ({ x: Number(p.x.toFixed(3)), y: Number(p.y.toFixed(3)) }));
-    return { lathePoints, modelType, outerCurve, objectCount: 1, areaRatio: 1.0 };
+    return { lathePoints, modelType, outerCurve, objectCount: 1, areaRatio: 1.0, empty: false };
   }
 
-  let lathePoints = [];
-  const maxR = activeCurve.length > 0 ? Math.max(...activeCurve.map((p) => p.r)) : 0;
-  const rScale = maxR > 0 ? (1.42 / maxR) : 1.0;
+  // Chuẩn hóa tỷ lệ theo từng hình thái dáng gốm độc bản (chống biến dạng dẹp bẹt)
+  let targetYSpan = 2.45;
+  let targetMaxR = 1.15;
+  let targetMinY = -1.15;
+  let footMinR = 0.45;
+
+  if (modelType === 'bowl') {
+    targetYSpan = 1.20;
+    targetMaxR = 1.40;
+    targetMinY = -0.65;
+    footMinR = 0.40;
+  } else if (modelType === 'plate') {
+    targetYSpan = 0.48;
+    targetMaxR = 1.55;
+    targetMinY = -0.22;
+    footMinR = 0.50;
+  } else if (modelType === 'mug') {
+    targetYSpan = 1.50;
+    targetMaxR = 1.05;
+    targetMinY = -0.75;
+    footMinR = 0.48;
+  } else if (modelType === 'vase-narrow-neck') {
+    targetYSpan = 2.60;
+    targetMaxR = 1.15;
+    targetMinY = -1.20;
+    footMinR = 0.45;
+  }
+
+  let maxR = 0.08;
+  for (const pt of activeCurve) {
+    if (pt.r > maxR) maxR = pt.r;
+  }
+  const rScale = maxR > 0 ? (targetMaxR / maxR) : 1.0;
 
   const baseMinY = activeCurve.length > 0 ? activeCurve[0].y : -1.0;
   const baseMaxY = activeCurve.length > 0 ? activeCurve[activeCurve.length - 1].y : 1.0;
   const ySpan = Math.max(0.01, baseMaxY - baseMinY);
 
   const scaledCurve = activeCurve.map((pt, idx) => {
-    const normY = Number((-0.65 + ((pt.y - baseMinY) / ySpan) * 1.25).toFixed(3));
-    const minR = idx === 0 ? 0.48 : (idx === 1 ? 0.50 : 0.08);
+    const normY = Number((targetMinY + ((pt.y - baseMinY) / ySpan) * targetYSpan).toFixed(3));
+    const minR = idx === 0 ? footMinR : (idx === 1 ? (footMinR + 0.05) : 0.08);
     const scaledR = Number(Math.max(minR, pt.r * rScale).toFixed(3));
     return { r: scaledR, y: normY };
   });
 
-  // Chân đế tiếp xúc mặt bàn
+  const lathePoints = [];
+
+  // 1. Chân đế tiếp xúc mặt bàn
   lathePoints.push({ x: 0, y: scaledCurve[0].y });
   lathePoints.push({ x: scaledCurve[0].r, y: scaledCurve[0].y });
 
-  // Thân ngoài: chân → vành miệng
+  // 2. Thân ngoài: chân → vành miệng
   for (let i = 1; i < scaledCurve.length; i++) {
     lathePoints.push({ x: scaledCurve[i].r, y: scaledCurve[i].y });
   }
 
-  // Vành miệng bo tròn nhẹ (lòe thanh thoát)
+  // 3. Vành miệng bo tròn nhẹ
   const rimPoint = scaledCurve[scaledCurve.length - 1];
-  const wallThick = Math.max(0.08, rimPoint.r * 0.10);
-  lathePoints.push({ x: Math.max(0.04, Number((rimPoint.r - wallThick * 0.4).toFixed(3))), y: Number((rimPoint.y + 0.04).toFixed(3)) });
-  lathePoints.push({ x: Math.max(0.04, Number((rimPoint.r - wallThick).toFixed(3))), y: rimPoint.y });
+  const wallThick = Math.min(rimPoint.r * 0.25, Math.max(0.04, rimPoint.r * 0.10));
+  lathePoints.push({
+    x: Math.max(0.04, Number((rimPoint.r - wallThick * 0.4).toFixed(3))),
+    y: Number((rimPoint.y + 0.04).toFixed(3))
+  });
+  lathePoints.push({
+    x: Math.max(0.04, Number((rimPoint.r - wallThick).toFixed(3))),
+    y: rimPoint.y
+  });
 
-  // Lòng trong khoét sâu xuống đáy (mirror các điểm thân ngoài trừ vành miệng)
+  // 4. Lòng trong khoét sâu xuống đáy (adaptive wall thickness, không tự giao nhau)
   for (let i = scaledCurve.length - 2; i >= 1; i--) {
-    const inR = Math.max(0.04, scaledCurve[i].r - wallThick);
-    lathePoints.push({ x: Number(inR.toFixed(3)), y: Number((scaledCurve[i].y + 0.02).toFixed(3)) });
+    const localThick = Math.min(scaledCurve[i].r * 0.28, wallThick);
+    const inR = Math.max(0.04, scaledCurve[i].r - localThick);
+    lathePoints.push({
+      x: Number(inR.toFixed(3)),
+      y: Number((scaledCurve[i].y + 0.02).toFixed(3))
+    });
   }
-  // Chạm đáy lòng trong
+
+  // 5. Chạm đáy lòng trong
   lathePoints.push({ x: 0, y: Number((scaledCurve[0].y + 0.15).toFixed(3)) });
 
   const objectCount = countSignificantObjects(isObject, w, h);
   const areaRatio = bbox.objW * bbox.objH > 0 ? (bbox.objW * bbox.objH) / (w * h) : 0;
 
-  return { lathePoints, modelType, outerCurve, objectCount, areaRatio };
+  return { lathePoints, modelType, outerCurve, objectCount, areaRatio, empty: false };
 }
 
 /**
@@ -349,9 +582,19 @@ export function silhouetteToLathePoints(mask, w, h, bbox, opts = {}) {
  * Đây là entry point chính cho Worker/FE browser.
  */
 export function imageToLathePoints(rgba, w, h, opts = {}) {
-  const { rgba: normRgba, w: nw, h: nh } = resizeLetterboxRgba(rgba, w, h, opts.NORM || 750);
+  const normSize = opts.NORM || 750;
+  const { rgba: normRgba, w: nw, h: nh } = resizeLetterboxRgba(rgba, w, h, normSize);
   const bbox = maskAndBbox(normRgba, nw, nh);
-  if (bbox.empty) return { lathePoints: [], modelType: opts.modelType || 'bowl', outerCurve: [], objectCount: 0, areaRatio: 0, empty: true };
+  if (bbox.empty || bbox.area === 0 || bbox.objW <= 2 || bbox.objH <= 2) {
+    return {
+      lathePoints: [],
+      modelType: opts.modelType || 'bowl',
+      outerCurve: [],
+      objectCount: 0,
+      areaRatio: 0,
+      empty: true
+    };
+  }
   return silhouetteToLathePoints(bbox.mask, nw, nh, bbox, opts);
 }
 
