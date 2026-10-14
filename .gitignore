@@ -368,3 +368,4 @@ backup/
 # Test data
 test_data/
 mock_data/
+.env*
