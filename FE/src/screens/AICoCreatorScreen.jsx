@@ -5,7 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import Button from '../ui/Button';
 import CeramicCanvas3D from '../components/CeramicCanvas3D';
 import { generateOrthographicViews, generateOrthographicViewsFromObject } from '../utils/orthographicRenderer';
-import { preloadImage } from '../utils/ceramicTextureGenerator';
+import { preloadImage, imageCache } from '../utils/ceramicTextureGenerator';
 import { parsePromptToConcept, paramsToLathePoints } from '../utils/aiPromptParser';
 import { analyzeAndDeconstructSpecimen } from '../utils/ceramicSpecimenAnalyzer.js';
 import { sketchPatternImage } from '../utils/patternSketcher.js';
@@ -248,7 +248,7 @@ export default function AICoCreatorScreen({
 
       // 2. Generate orthographic views
       const initialPatternImg = (specDraft.pattern && specDraft.pattern !== 'none')
-        ? imageCache.get(specDraft.pattern) || null
+        ? (typeof imageCache?.get === 'function' ? imageCache.get(specDraft.pattern) : null)
         : null;
 
       const finalViews = generateOrthographicViews(
