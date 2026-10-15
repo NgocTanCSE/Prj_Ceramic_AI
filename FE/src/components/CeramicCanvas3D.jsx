@@ -6,65 +6,19 @@ import {
   createCeramicTextureCanvas, createDecalCanvases, computeDecalPlacement,
   getDefaultModelProfile, getDefaultLatheProfile, imageCache,
 } from '../utils/ceramicTextureGenerator';
-import { createCeramicGeometry } from '../utils/orthographicRenderer';
+import { createCeramicGeometry, createMugHandleGeometry } from '../utils/orthographicRenderer';
 import { renderFidelityScore } from '../utils/renderFidelity';
+import { createRadialShadowCanvas, createContactShadowCanvas } from '../utils/shadowCanvas';
+
+// Studio backdrop colour (warm paper). Kept as {r,g,b} (0-255) so the scene
+// background can be built from separate channels — passing a single float to
+// THREE.Color is misread as a hex code (0x000000 = black).
+const STUDIO_BG = { r: 0xf4, g: 0xf1, b: 0xea };
+
+// Small outward offset (world units) applied along a placement normal so decals
+// sit just above the ceramic surface and avoid z-fighting.
+const DECAL_NUDGE = 0.006;
 import { useDesign } from '../contexts/DesignContext';
-
-/* ──────────────────────────────────────────────────────────
-   CeramicCanvas3D — 3D turntable viewer NÂNG CẤP SANG DecalGeometry.
-
-   Thay thế Cylindrical UV Wrapping (canvas 2D dán qua wrapS=RepeatWrapping
-   trên LatheGeometry) bằng:
-     • body  : kem base (glaze + rim + speckle) — dùng createCeramicTextureCanvas
-               với pattern:'none', customText:'' → thân đối xứng, không seam.
-     • decals: hoa văn ảnh / vector / chữ khắc → mỗi món được render lên 1 canvas
-               trong suốt rồi dán lên LatheGeometry bằng three/examples DecalGeometry.
-
-   Toạ độ decal tính từ computeDecalPlacement (x, y, z) trùng hệ quay rotateY(PI)
-   trong createCeramicGeometry → decal rơi đúng vị trí cũ trên cylindrical UV.
-   ────────────────────────────────────────────────────────── */
-
-const STUDIO_BG = { r: 248, g: 247, b: 244 };
-const DECAL_NUDGE = 0.0025; // lùi decal dịnh hướng normal để tránh z-fighting
-
-// Helpers sinh canvas bóng đổ (copy nguyên từ StudioScreen — module private)
-function createRadialShadowCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 120);
-  gradient.addColorStop(0, 'rgba(35, 25, 20, 0.35)');
-  gradient.addColorStop(0.3, 'rgba(40, 30, 25, 0.20)');
-  gradient.addColorStop(0.7, 'rgba(45, 35, 30, 0.07)');
-  gradient.addColorStop(1, 'rgba(50, 40, 35, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 256, 256);
-  return canvas;
-}
-function createContactShadowCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128; canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 60);
-  gradient.addColorStop(0, 'rgba(20, 15, 10, 0.75)');
-  gradient.addColorStop(0.4, 'rgba(25, 20, 15, 0.40)');
-  gradient.addColorStop(0.8, 'rgba(30, 25, 20, 0.08)');
-  gradient.addColorStop(1, 'rgba(30, 25, 20, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 128, 128);
-  return canvas;
-}
-// Quai cầm dáng chữ C cho cốc (chỉ áp dụng mug)
-function createMugHandleGeometry(modelType) {
-  if (modelType !== 'mug') return null;
-  const curve = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(0.88, 0.50, 0),
-    new THREE.Vector3(1.72, 0.38, 0),
-    new THREE.Vector3(1.68, -0.22, 0),
-    new THREE.Vector3(0.78, -0.48, 0)
-  );
-  return new THREE.TubeGeometry(curve, 32, 0.11, 16, false);
-}
 
 export default function CeramicCanvas3D({
   glbUrl = null,
@@ -87,10 +41,9 @@ export default function CeramicCanvas3D({
   interactionMode = null,
   onInteractionModeChange,
   onSnapshotCapture,
-  // (tùy chọn) Đánh giá "3D vs ảnh gốc": truyền sourceImage + onFidelityScore để
-  // bật tính điểm fidelity (WebGL render so ảnh gốc). Không truyền = tắt (inert).
   sourceImage = null,
   onFidelityScore = null,
+  customGeometry = null,
 }) {
   let design = null;
   try {
@@ -727,8 +680,8 @@ export default function CeramicCanvas3D({
       side: THREE.DoubleSide,
     });
 
-    const mainGeometry = createCeramicGeometry(modelType, buildProfile());
-    const handleGeometry = createMugHandleGeometry(modelType);
+    const mainGeometry = customGeometry ? customGeometry.clone() : createCeramicGeometry(modelType, buildProfile());
+    const handleGeometry = (!customGeometry && modelType === 'mug') ? createMugHandleGeometry(modelType, buildProfile()) : null;
 
     // Căn đáy phôi tiếp đất tại Y = -1.0
     mainGeometry.computeBoundingBox();

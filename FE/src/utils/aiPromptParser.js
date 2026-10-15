@@ -201,185 +201,139 @@ export function parsePromptToConcept(queryText = '') {
  * 2D spline nằm trong không gian Chuẩn gốm: y ∈ [-1.20, 1.40], x (radius) ∈ [0, 2.0]
  */
 export function paramsToLathePoints(params = {}) {
-  const { archetype = 'vase', height = 22, maxRadius = 11.5, neckRatio = 0.35, rimFlare = 0.65, baseRadius = 0.45, curvature = 'bulbous' } = params;
+  const {
+    archetype = 'vase',
+    height = 22,
+    maxRadius = 11.5,
+    neckRatio = 0.35,
+    rimFlare = 0.65,
+    baseRadius = 0.45,
+    curvature = 'bulbous'
+  } = params;
 
-  // FIX (bug 5 — sai tỷ lệ bát/bình): Dùng baseline riêng cho từng dáng gốm.
-  // Trước đây dùng chung vase baseline (22cm → 2.55 normalized height) cho TẤT CẢ dáng,
-  // dẫn tới bát 8.5cm bị co thành 0.97 normalized (thấp hơn target 1.20) → bị bóp bẹt.
+  // Baseline hình học cho từng dáng gốm chuẩn tỉ lệ làng nghề Biên Hòa
   const normBases = {
-    vase:            { heightBase: 22.0, radiusBase: 11.5, normHeight: 2.55, normRadius: 1.18 },
-    'vase-narrow-neck': { heightBase: 25.0, radiusBase: 11.5, normHeight: 2.65, normRadius: 1.18 },
-    bowl:            { heightBase: 8.5,  radiusBase: 7.5,  normHeight: 1.20, normRadius: 1.35 },
-    plate:           { heightBase: 3.8,  radiusBase: 13.0, normHeight: 0.48, normRadius: 1.55 },
-    mug:             { heightBase: 10.5, radiusBase: 4.5,  normHeight: 1.50, normRadius: 1.05 },
+    vase: { heightBase: 22.0, radiusBase: 11.5, normHeight: 2.45, normRadius: 1.15, minY: -1.15 },
+    'vase-narrow-neck': { heightBase: 25.0, radiusBase: 11.5, normHeight: 2.55, normRadius: 1.15, minY: -1.20 },
+    bowl: { heightBase: 8.5, radiusBase: 7.5, normHeight: 1.20, normRadius: 1.35, minY: -0.65 },
+    plate: { heightBase: 3.8, radiusBase: 13.0, normHeight: 0.48, normRadius: 1.55, minY: -0.22 },
+    mug: { heightBase: 10.5, radiusBase: 4.5, normHeight: 1.50, normRadius: 1.05, minY: -0.75 },
   };
-  const base = normBases[archetype] || normBases.vase;
-  const hNorm = (height / base.heightBase) * base.normHeight;
-  const rNorm = (maxRadius / base.radiusBase) * base.normRadius;
 
-  // Tính các điểm mốc chính (anchor points) theo archetype + shapeParams
+  const base = normBases[archetype] || normBases.vase;
+  const hNorm = Math.max(0.35, (height / base.heightBase) * base.normHeight);
+  const rNorm = Math.max(0.40, (maxRadius / base.radiusBase) * base.normRadius);
+  const minY = base.minY;
+  const maxY = minY + hNorm;
+
+  // Bán kính chân đế tối thiểu 42% bán kính bụng để đứng vững (chống lỗi "chân nhọn con quay")
+  const safeBaseRatio = Math.max(0.42, Math.min(0.70, baseRadius || 0.48));
+  const rFoot = rNorm * safeBaseRatio;
+
+  // Bán kính cổ và miệng
+  const safeNeckRatio = Math.max(0.25, Math.min(0.85, neckRatio || 0.40));
+  const rNeck = archetype === 'vase-narrow-neck'
+    ? rNorm * Math.max(0.20, Math.min(0.40, safeNeckRatio))
+    : rNorm * safeNeckRatio;
+  const rRim = Math.max(rNeck * 1.1, rNeck * (1 + (rimFlare || 0.5) * 0.28));
+
+  // Tọa độ các mốc neo (anchors) thành ngoài theo từng dáng gốm
   const anchors = [];
 
-  // When archetype is 'vase' but LLaMA detected a narrow neck (neckRatio < 0.4),
-  // augment with neck-narrowing anchors to produce the correct silhouette
-  const hasNarrowNeck = archetype === 'vase' && neckRatio < 0.4;
+  if (archetype === 'bowl') {
+    // Dáng Bát: Đáy tiếp đất vững, thân loe đều đặn lên vành miệng
+    anchors.push([0, minY]);
+    anchors.push([rFoot, minY]);
+    anchors.push([rFoot * 1.06, minY + hNorm * 0.12]);
+    anchors.push([rNorm * 0.65, minY + hNorm * 0.35]);
+    anchors.push([rNorm * 0.88, minY + hNorm * 0.65]);
+    anchors.push([rNorm, maxY]);
+  } else if (archetype === 'plate') {
+    // Dáng Đĩa: Nông, vành mở rộng, chân đế mộc
+    anchors.push([0, minY]);
+    anchors.push([rFoot * 0.85, minY]);
+    anchors.push([rNorm * 0.60, minY + hNorm * 0.30]);
+    anchors.push([rNorm * 0.85, minY + hNorm * 0.70]);
+    anchors.push([rNorm, maxY]);
+  } else if (archetype === 'mug') {
+    // Dáng Cốc: Thân trụ hơi bầu tròn hữu cơ, cổ thắt nhẹ
+    anchors.push([0, minY]);
+    anchors.push([rFoot, minY]);
+    anchors.push([rFoot * 1.04, minY + hNorm * 0.10]);
+    anchors.push([rNorm, minY + hNorm * 0.45]);
+    anchors.push([rNorm * 0.95, minY + hNorm * 0.75]);
+    anchors.push([rRim, maxY]);
+  } else {
+    // Dáng Bình/Lọ (vase & vase-narrow-neck)
+    let bellyYPos = 0.45;
+    if (curvature === 'bulbous') bellyYPos = 0.38; // bụng thấp đầy đặn
+    else if (curvature === 'slender') bellyYPos = 0.50; // thân thon đều
+    else if (curvature === 'flared') bellyYPos = 0.60; // bụng cao
 
-  switch (curvature) {
-    case 'slender':
-      anchors.push([0, -hNorm / 2]);                  // đáy
-      anchors.push([rNorm * 0.15, -hNorm * 0.85 / 2]); // chân dưới
-      anchors.push([rNorm * 0.45, -hNorm * 0.60 / 2]);
-      anchors.push([rNorm * 0.85, -hNorm * 0.30 / 2]);
-      anchors.push([rNorm * 0.92, -hNorm * 0.10 / 2]);
-      anchors.push([rNorm, 0]);                       // thắng cổ (nếu có)
-      if (archetype === 'vase-narrow-neck' || hasNarrowNeck) {
-        anchors.push([rNorm * (0.15 + neckRatio), hNorm * 0.25 / 2]);
-        anchors.push([rNorm * (0.12 + neckRatio), hNorm * 0.50 / 2]);
-        anchors.push([rNorm * (0.15 + neckRatio), hNorm * 0.70 / 2]);
-      }
-      anchors.push([rNorm * 0.80, hNorm * 0.95 / 2]);   // miệng
-      anchors.push([rNorm * (0.85 + rimFlare * 0.30), hNorm / 2]); // miệng loe
-      break;
-
-    case 'bulbous':
-      anchors.push([0, -hNorm / 2]);                   // đáy
-      anchors.push([rNorm * 0.15, -hNorm * 0.85 / 2]);
-      anchors.push([rNorm * 0.30, -hNorm * 0.65 / 2]);
-      anchors.push([rNorm * 0.70, -hNorm * 0.45 / 2]);
-      anchors.push([rNorm, -hNorm * 0.15 / 2]);       // bụng rộng nhất
-      anchors.push([rNorm * 0.95, hNorm * 0.15 / 2]);
-      if (archetype === 'vase-narrow-neck' || hasNarrowNeck) {
-        anchors.push([rNorm * (0.20 + neckRatio), hNorm * 0.35 / 2]);
-        anchors.push([rNorm * (0.15 + neckRatio), hNorm * 0.55 / 2]);
-        anchors.push([rNorm * (0.20 + neckRatio), hNorm * 0.75 / 2]);
-      }
-      anchors.push([rNorm * 0.90, hNorm * 0.85 / 2]);
-      anchors.push([rNorm * (0.80 + rimFlare * 0.30), hNorm / 2]);
-      break;
-
-    case 'flared':
-      anchors.push([0, -hNorm / 2]);
-      anchors.push([rNorm * 0.25, -hNorm * 0.75 / 2]);
-      anchors.push([rNorm * 0.55, -hNorm * 0.50 / 2]);
-      anchors.push([rNorm, -hNorm * 0.20 / 2]);
-      anchors.push([rNorm * 1.05, 0]);                 // bụng rộng
-      if (archetype === 'vase-narrow-neck' || hasNarrowNeck) {
-        anchors.push([rNorm * (0.18 + neckRatio), hNorm * 0.25 / 2]);
-        anchors.push([rNorm * (0.15 + neckRatio), hNorm * 0.50 / 2]);
-      }
-      anchors.push([rNorm * 0.95, hNorm * 0.75 / 2]);
-      anchors.push([rNorm * (0.90 + rimFlare * 0.30), hNorm / 2]);
-      break;
-
-    case 'conical':
-      anchors.push([0, -hNorm / 2]);
-      anchors.push([rNorm * 0.70, -hNorm * 0.70 / 2]);
-      anchors.push([rNorm * 0.90, -hNorm * 0.40 / 2]);
-      anchors.push([rNorm, 0]);
-      if (archetype === 'vase-narrow-neck' || hasNarrowNeck) {
-        anchors.push([rNorm * (0.20 + neckRatio), hNorm * 0.30 / 2]);
-        anchors.push([rNorm * (0.15 + neckRatio), hNorm * 0.60 / 2]);
-      }
-      anchors.push([rNorm * 0.85, hNorm * 0.80 / 2]);
-      anchors.push([rNorm * (0.75 + rimFlare * 0.25), hNorm / 2]);
-      break;
-
-    case 'flat':
-      // Disc / flat object — minimal height variation
-      anchors.push([0, -hNorm / 2 * 0.85]);
-      anchors.push([rNorm * 0.35, -hNorm / 2 * 0.70]);
-      anchors.push([rNorm * 0.70, -hNorm / 2 * 0.30]);
-      anchors.push([rNorm, 0]);
-      anchors.push([rNorm * 1.05, hNorm / 2 * 0.30]);
-      anchors.push([rNorm * 0.90, hNorm / 2 * 0.70]);
-      anchors.push([rNorm * 0.50, hNorm / 2 * 0.85]);
-      break;
-
-    default: // 'bulbous'
-      anchors.push([0, -hNorm / 2]);
-      anchors.push([rNorm * 0.30, -hNorm * 0.60 / 2]);
-      anchors.push([rNorm * 0.70, -hNorm * 0.30 / 2]);
-      anchors.push([rNorm, 0]);
-      if (archetype === 'vase-narrow-neck' || hasNarrowNeck) {
-        anchors.push([rNorm * (0.18 + neckRatio), hNorm * 0.30 / 2]);
-        anchors.push([rNorm * (0.14 + neckRatio), hNorm * 0.60 / 2]);
-        anchors.push([rNorm * (0.18 + neckRatio), hNorm * 0.80 / 2]);
-      } else if (archetype === 'bowl') {
-        anchors.push([rNorm * 0.95, hNorm * 0.10 / 2]);
-      } else if (archetype === 'plate') {
-        anchors.push([rNorm * 1.05, hNorm * 0.05 / 2]);
-      }
-      anchors.push([rNorm * (0.85 + rimFlare * 0.20), hNorm / 2]);
+    anchors.push([0, minY]);                                     // Tâm chân đế
+    anchors.push([rFoot, minY]);                                 // Mép chân đế
+    anchors.push([rFoot * 1.05, minY + hNorm * 0.12]);           // Đáy nở lên
+    anchors.push([rNorm * 0.90, minY + hNorm * (bellyYPos * 0.65)]); // Thân dưới nở
+    anchors.push([rNorm, minY + hNorm * bellyYPos]);             // Bụng nở cực đại
+    anchors.push([rNorm * 0.82, minY + hNorm * (bellyYPos + (1 - bellyYPos) * 0.35)]); // Vai bình
+    anchors.push([rNeck, minY + hNorm * (bellyYPos + (1 - bellyYPos) * 0.70)]);       // Cổ thắt
+    anchors.push([rRim, maxY]);                                  // Miệng bình loe
   }
 
-  // Đối với bowl, đảo ngược: miệng trên cùng là rộng nhất
-  if (archetype === 'bowl' && anchors.length > 0) {
-    anchors.sort((a, b) => a[1] - b[1]);
-  }
-  // Đối với plate, đảm bảo dạng phẳng
-  if (archetype === 'plate') {
-    anchors[0] = [0, -hNorm / 2 * 0.9];  // đáy phẳng
-    anchors[anchors.length - 1] = [rNorm * (1.0 + rimFlare * 0.3), hNorm / 2 * 0.9];
-  }
+  // Nội suy Catmull-Rom mượt mà
+  const rawSpline = catmullRomSpline(anchors, 6);
 
-  // Catmull-Rom interpolation với 8-12 điểm trung gian
-  const interpolated = catmullRomSpline(anchors, 8);
+  // Đảm bảo bán kính vỏ ngoài luôn dương (chống lỗi tự cắt mesh)
+  const outerProfile = rawSpline.map(([rx, ry], idx) => {
+    const minSafeR = idx === 0 ? 0 : (idx === 1 ? rFoot : 0.08);
+    return {
+      x: idx === 0 ? 0 : Number(Math.max(minSafeR, rx).toFixed(3)),
+      y: Number(ry.toFixed(3)),
+    };
+  });
 
-  // Chuyển sang định dạng lathePoints: {x: r, y: height}
-  const lathePoints = interpolated.map(([rx, ry]) => ({ x: rx, y: ry }));
+  // ── Xây dựng THÀNH TRONG (Inner Wall) & LÒNG RỖNG KHÉP KÍN ──
+  // Độ dày thành gốm tiêu chuẩn 7-10% bán kính
+  const wallThick = Number(Math.max(0.06, rNorm * 0.09).toFixed(3));
+  const floorThick = Number(Math.max(0.08, hNorm * 0.12).toFixed(3));
+  const rimOuter = outerProfile[outerProfile.length - 1];
 
-  // FIX (bug 2 — bát lông như lưỡi liềm): Với bowl/plate, thêm inner wall points
-  // để tạo thành dày thực tế (hollow interior). Spline chỉ tạo outer silhouette.
-  if (archetype === 'bowl' && lathePoints.length >= 6) {
-    // Outer wall đã có sẵn từ spline (foot → rim).
-    // Thêm inner wall: duyệt outer wall từ rim xuống foot, tạo points bên trong (~10% smaller radius)
-    const outerProfile = lathePoints.slice(); // copy outer silhouette
-    const innerPoints = [];
-    // Lấy các điểm ngoài cùng (ít nhất 4) để xây dựng inner wall
-    const rimOuter = outerProfile[outerProfile.length - 1]; // điểm rộng nhất (miệng)
-    const wallThicknessRatio = 0.10; // 10% — đường dẫn trong cách ngoài 10%
+  const fullLathePoints = [];
 
-    const floorOffset = Math.max(0.04, (rimOuter.y - outerProfile[0].y) * 0.08);
-    for (let i = outerProfile.length - 1; i >= 0; i--) {
-      const p = outerProfile[i];
-      const progressFromRim = (outerProfile.length - 1 - i) / Math.max(1, outerProfile.length - 1);
-      const innerR = Math.max(p.x * (1 - wallThicknessRatio), i === 0 ? 0 : 0.02);
-      // Nâng dần đáy lòng trong để đáy gốm có độ dày thực tế, không bị mỏng dính ở tâm
-      const innerY = Math.min(rimOuter.y - 0.02, p.y + floorOffset * progressFromRim);
-      innerPoints.push({ x: innerR, y: innerY });
-    }
-    // Kết hợp outer wall (foot→rim) + inner wall (rim→foot) thành profile khép kín
-    lathePoints.length = 0;
-    lathePoints.push(...outerProfile);
-    lathePoints.push(...innerPoints);
-  } else if (archetype === 'plate' && lathePoints.length >= 4) {
-    // Plate: thêm inner wall nhẹ để có độ dày
-    const outerProfile = lathePoints.slice();
-    const innerPoints = [];
-    const rimOuter = outerProfile[outerProfile.length - 1];
-    const wallThicknessRatio = 0.12;
-    const floorOffset = Math.max(0.02, (rimOuter.y - outerProfile[0].y) * 0.10);
-    for (let i = outerProfile.length - 1; i >= 0; i--) {
-      const p = outerProfile[i];
-      const progressFromRim = (outerProfile.length - 1 - i) / Math.max(1, outerProfile.length - 1);
-      const innerR = Math.max(p.x * (1 - wallThicknessRatio), i === 0 ? 0 : 0.02);
-      const innerY = Math.min(rimOuter.y - 0.015, p.y + floorOffset * progressFromRim);
-      innerPoints.push({ x: innerR, y: innerY });
-    }
-    lathePoints.length = 0;
-    lathePoints.push(...outerProfile);
-    lathePoints.push(...innerPoints);
+  // 1. Toàn bộ vỏ ngoài từ đáy lên miệng
+  for (let i = 0; i < outerProfile.length; i++) {
+    fullLathePoints.push(outerProfile[i]);
   }
 
-  // Đảm bảo ít nhất 8 điểm
-  if (lathePoints.length < 8) {
-    // Pad bằng cách lặp lại
-    while (lathePoints.length < 8) {
-      lathePoints.push(lathePoints[lathePoints.length - 1]);
-    }
+  // 2. Vành miệng bo tròn mượt (Lip rim round-over)
+  fullLathePoints.push({
+    x: Number(Math.max(0.04, rimOuter.x - wallThick * 0.4).toFixed(3)),
+    y: Number((rimOuter.y + 0.03).toFixed(3)),
+  });
+  fullLathePoints.push({
+    x: Number(Math.max(0.04, rimOuter.x - wallThick).toFixed(3)),
+    y: Number(rimOuter.y.toFixed(3)),
+  });
+
+  // 3. Thành trong đi ngược từ miệng xuống lòng đáy (Inner Wall Cavity)
+  for (let i = outerProfile.length - 2; i >= 1; i--) {
+    const p = outerProfile[i];
+    const progressFromRim = (outerProfile.length - 1 - i) / Math.max(1, outerProfile.length - 1);
+    const innerR = Math.max(0.03, p.x - wallThick);
+    const innerY = Math.min(rimOuter.y - 0.02, p.y + floorThick * progressFromRim);
+    fullLathePoints.push({
+      x: Number(innerR.toFixed(3)),
+      y: Number(innerY.toFixed(3)),
+    });
   }
 
-  return lathePoints;
+  // 4. Tâm đáy lòng trong kết thúc khép kín vào trục đối xứng x = 0
+  fullLathePoints.push({
+    x: 0,
+    y: Number((minY + floorThick).toFixed(3)),
+  });
+
+  return fullLathePoints;
 }
 
 /**

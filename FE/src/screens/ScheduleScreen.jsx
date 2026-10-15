@@ -116,6 +116,10 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
 
     setIsSubmitting(true);
     try {
+      const notesWithProduct = selectedProduct
+        ? `[Mẫu ngắm: ${selectedProduct.name} (${modelType})] ${form.notes || ''}`.trim()
+        : (form.notes || '');
+
       const res = await fetch(`${apiBase}/api/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,9 +130,11 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
           date: form.date,
           timeSlot: form.timeSlot,
           attendees: form.attendees,
-          notes: form.notes || '',
+          notes: notesWithProduct,
           bookingType: 'visit',
           purpose: 'sample_viewing',
+          productName: selectedProduct?.name || 'Tham quan ngắm mẫu tự do',
+          productId: selectedProduct?.id || null,
           paymentMethod,
           depositAmount,
           depositStatus: 'pending',
@@ -176,6 +182,7 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
     }
   };
 
+  // Nếu đã xác nhận thành công → hiển thị chứng nhận đặt lịch
   if (confirmed) {
     return (
       <div className="w-full h-full overflow-y-auto p-6 md:p-10 lg:p-12 bg-ceramic-paper text-ceramic-charcoal">
@@ -186,93 +193,25 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
     );
   }
 
-  // Nếu chưa chọn sản phẩm → show inline mini picker (chọn trực tiếp tại đây)
-  if (!hasSelectedProduct) {
-    return (
-      <div ref={containerRef} className="w-full h-full overflow-y-auto bg-ceramic-paper text-ceramic-charcoal font-body">
-        <div className="max-w-4xl mx-auto px-4 py-8 md:py-12 space-y-10">
-
-          <section className="text-center space-y-6">
-            <div className="space-y-3">
-              <h3 className="font-editorial text-2xl font-bold text-ceramic-charcoal">
-                Chưa chọn sản phẩm
-              </h3>
-              <p className="text-sm text-ceramic-slate max-w-md mx-auto">
-                Chọn một mẫu gốm để đặt lịch ngắm tại xưởng:
-              </p>
-            </div>
-
-            {/* Mini product picker — pick directly here */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-              {lazyProducts ? lazyProducts.slice(0, 8).map((p) => (
-                <button
-                  key={p.id || p.slug}
-                  type="button"
-                  onClick={() => {
-                    // Chỉ chọn sản phẩm đơn giản — không gọi AI xử lý ảnh
-                    setSelectedProduct(p);
-                    setModelType(p.modelType || p.type || 'vase');
-                    setPattern('none');
-                  }}
-                  className="flex flex-col gap-2 p-3 border border-ceramic-border bg-ceramic-paper rounded-xl hover:border-ceramic-terracotta hover:bg-ceramic-cream transition-all cursor-pointer text-center"
-                >
-                  <div className="aspect-square border border-ceramic-border overflow-hidden bg-ceramic-cream rounded-lg mx-auto w-full">
-                    {p.image || p.thumbnail ? (
-                      <img
-                        src={p.image || p.thumbnail}
-                        alt={p.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                    ) : (
-                      <span className="text-[10px] font-mono text-ceramic-slate/50 flex items-center justify-center h-full">NO IMG</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-medium text-ceramic-charcoal truncate">
-                    {p.name}
-                  </span>
-                  <span className="text-xs font-mono text-ceramic-terracotta">
-                    {(p.price || 0).toLocaleString('vi-VN')}₫
-                  </span>
-                </button>
-              )) : (
-                // Skeleton fallback while lazy-loading PRODUCTS
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="animate-pulse border border-ceramic-border bg-ceramic-cream/50 rounded-xl aspect-[4/3]"></div>
-                ))
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              <Button variant="primary" size="md" onClick={() => setActiveTab('gallery')}>
-                Xem tất cả Thư viện mẫu
-              </Button>
-              <Button variant="secondary" size="md" onClick={() => setActiveTab('ai-creator')}>
-                Tạo bởi AI
-              </Button>
-            </div>
-          </section>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div ref={containerRef} className="w-full h-full overflow-y-auto bg-ceramic-paper text-ceramic-charcoal font-body">
-      <div className="max-w-4xl mx-auto px-4 py-10 md:py-14 space-y-12">
+      <div className="max-w-4xl mx-auto px-4 py-10 md:py-14 space-y-10">
 
         {/* ── Editorial Header ── */}
-        <section className="space-y-4">
+        <section className="space-y-2">
           <div className="flex items-center gap-3 text-xs font-mono text-ceramic-terracotta">
-            <span className="uppercase tracking-wider">ĐẶT LỊCH NGỮ DÒNG NGẮM MẪU</span>
+            <span className="uppercase tracking-wider">ĐẶT LỊCH NGẮM MẪU TẠI XƯỞNG GỐM TÂN VẠN</span>
           </div>
+          <p className="text-xs text-ceramic-slate">
+            Đến ngắm phôi thực tế, chọn sắc men truyền thống (Vert de Biên Hòa, đá đỏ Bửu Long...) và thảo luận cùng nghệ nhân.
+          </p>
         </section>
 
-        {/* ── Selected Product Preview ── */}
-        {hasSelectedProduct && (
+        {/* ── Selected Product Preview OR Quick Sample Picker ── */}
+        {hasSelectedProduct ? (
           <section>
-            <div className="flex items-start gap-4 p-6 border border-ceramic-border bg-ceramic-cream">
-              <div className="w-20 h-20 border-2 border-ceramic-border flex-shrink-0 overflow-hidden bg-ceramic-paper">
+            <div className="flex items-start gap-4 p-5 border border-ceramic-border bg-ceramic-cream rounded-xl">
+              <div className="w-20 h-20 border-2 border-ceramic-border flex-shrink-0 overflow-hidden bg-ceramic-paper rounded-lg">
                 {selectedProduct.image || selectedProduct.thumbnail ? (
                   <img
                     src={selectedProduct.image || selectedProduct.thumbnail}
@@ -289,26 +228,82 @@ export default function ScheduleScreen({ apiBase = import.meta.env.VITE_API_BASE
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-ceramic-terracotta">
-                    MẪU ĐÃ CHỌN
+                    MẪU GỐM MUỐN NGẮM THỰC TẾ
                   </div>
                   <button
                     type="button"
                     onClick={() => { setSelectedProduct(null); setModelType('mug'); setPattern('none'); }}
-                    className="text-[10px] font-mono text-ceramic-slate hover:text-ceramic-terracotta underline"
+                    className="text-[10px] font-mono text-ceramic-slate hover:text-ceramic-terracotta underline cursor-pointer"
                   >
-                    Chọn lại
+                    Bỏ chọn / Đổi mẫu khác
                   </button>
                 </div>
                 <h4 className="font-editorial text-lg font-bold text-ceramic-charcoal">
                   {selectedProduct.name}
                 </h4>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-mono text-ceramic-slate">
-                  <span>Loại: <strong className="text-ceramic-charcoal">{modelType}</strong></span>
+                  <span>Dáng: <strong className="text-ceramic-charcoal">{modelType}</strong></span>
                   {selectedProduct.price && (
-                    <span>Giá: <strong className="text-ceramic-terracotta">{selectedProduct.price.toLocaleString('vi-VN')}₫</strong></span>
+                    <span>Giá mẫu: <strong className="text-ceramic-terracotta">{selectedProduct.price.toLocaleString('vi-VN')}₫</strong></span>
                   )}
                 </div>
               </div>
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-4 p-5 border border-ceramic-border/80 bg-ceramic-cream/40 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-editorial text-base font-bold text-ceramic-charcoal">
+                  Mẫu gốm muốn ngắm (Tùy chọn)
+                </h3>
+                <p className="text-xs text-ceramic-slate">
+                  Bạn có thể chọn nhanh một mẫu để xưởng chuẩn bị trước, hoặc để trống để ngắm tự do toàn bộ xưởng:
+                </p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setActiveTab('gallery')}>
+                Mở Thư viện mẫu
+              </Button>
+            </div>
+
+            {/* Quick mini sample picker — click to choose without AI */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {lazyProducts ? lazyProducts.slice(0, 4).map((p) => (
+                <button
+                  key={p.id || p.slug}
+                  type="button"
+                  onClick={() => {
+                    setSelectedProduct(p);
+                    setModelType(p.modelType || p.type || 'vase');
+                    setPattern('none');
+                    showToast(`Đã chọn mẫu "${p.name}"`);
+                  }}
+                  className="flex flex-col gap-1.5 p-2.5 border border-ceramic-border bg-ceramic-paper rounded-lg hover:border-ceramic-terracotta hover:bg-ceramic-cream transition-all cursor-pointer text-center group"
+                >
+                  <div className="aspect-square border border-ceramic-border/60 overflow-hidden bg-ceramic-cream rounded mx-auto w-full">
+                    {p.image || p.thumbnail ? (
+                      <img
+                        src={p.image || p.thumbnail}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <span className="text-[9px] font-mono text-ceramic-slate/50 flex items-center justify-center h-full">NO IMG</span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-medium text-ceramic-charcoal truncate w-full">
+                    {p.name}
+                  </span>
+                  <span className="text-[10px] font-mono text-ceramic-terracotta">
+                    {(p.price || 0).toLocaleString('vi-VN')}₫
+                  </span>
+                </button>
+              )) : (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="animate-pulse border border-ceramic-border bg-ceramic-cream/50 rounded-lg aspect-[4/3]"></div>
+                ))
+              )}
             </div>
           </section>
         )}

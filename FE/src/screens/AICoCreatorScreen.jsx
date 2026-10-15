@@ -10,7 +10,7 @@ import { parsePromptToConcept, paramsToLathePoints } from '../utils/aiPromptPars
 import { analyzeAndDeconstructSpecimen } from '../utils/ceramicSpecimenAnalyzer.js';
 import { sketchPatternImage } from '../utils/patternSketcher.js';
 import { downloadCeramicPackage } from '../utils/ceramicExporter.js';
-import { extractSilhouetteMaskFromCanvas } from '../utils/meshInflator.js';
+import { extractSilhouetteMaskFromCanvas, extractSymmetricLatheProfileFromMask, inflateSilhouetteToMesh } from '../utils/meshInflator.js';
 
 /* ──────────────────────────────────────────────────────────
    AICoCreatorScreen - Bàn Phác Thảo & Bản Vẽ Trực Giao 6 Mặt
@@ -139,6 +139,7 @@ export default function AICoCreatorScreen({
     setStage2D(null);
     setActiveView('front');
     setViewportMode('3d');
+    setIsLoading(false);
     showToast(`Đã tạo mẫu 3D "${concept.title}"!`, 'success');
   };
 
@@ -318,6 +319,36 @@ export default function AICoCreatorScreen({
           if (!inferredModelType || promptText.toLowerCase().includes('ảnh')) {
             inferredModelType = silhouetteType;
           }
+
+          let cleanCustomGeometry = null;
+          // Trích xuất lathePoints thực tế từ mặt cắt đối xứng của phôi ảnh thật
+          try {
+            const extractedPoints = extractSymmetricLatheProfileFromMask(
+              maskData.mask,
+              maskData.w,
+              maskData.h,
+              maskData.bbox
+            );
+            if (extractedPoints && extractedPoints.length >= 8) {
+              cleanLathePoints = extractedPoints;
+            }
+          } catch (extErr) {
+            console.warn('Lỗi trích xuất tiết diện ảnh thật:', extErr);
+          }
+
+          // Hỗ trợ tái tạo 3D tự do (free-form silhouette mesh) cho các dáng phi đối xứng / điêu khắc
+          const isFreeform = promptText.toLowerCase().includes('tự do') ||
+            promptText.toLowerCase().includes('uốn lượn') ||
+            promptText.toLowerCase().includes('lá sen') ||
+            promptText.toLowerCase().includes('ấm trà') ||
+            promptText.toLowerCase().includes('điêu khắc');
+          if (isFreeform) {
+            try {
+              cleanCustomGeometry = inflateSilhouetteToMesh(offscreen);
+            } catch (infErr) {
+              console.warn('Lỗi đúc khuôn 3D tự do từ silhouette:', infErr);
+            }
+          }
         }
       }
     } catch (mErr) {
@@ -351,6 +382,7 @@ export default function AICoCreatorScreen({
       title: aiConcept?.title || promptText || 'Tiêu Bản Gốm Sứ',
       modelType: inferredModelType,
       lathePoints: cleanLathePoints,
+      customGeometry: cleanCustomGeometry,
       suggestedGlaze: {
         hex: finalGlazeHex,
         name: finalGlazeName,
@@ -798,6 +830,7 @@ export default function AICoCreatorScreen({
                     patternImage={conceptResult.patternImage || null}
                     rimStyle={conceptResult.rimStyle || 'brown'}
                     customLathePoints={conceptResult.lathePoints}
+                    customGeometry={conceptResult.customGeometry || null}
                     showControls={false}
                   />
                 </div>

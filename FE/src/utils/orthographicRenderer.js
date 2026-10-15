@@ -10,37 +10,6 @@ export function createCeramicGeometry(modelType = 'bowl', lathePoints = null, cu
     return customGeometry.clone();
   }
 
-  if (modelType === 'mug') {
-    // Dáng Cốc Bầu Men Mộc 1:1 (Chubby Belly Mug theo tiêu bản pottery-mug-001)
-    // Thân bầu tròn hữu cơ, bụng phình cong mềm mại, cổ thắt nhẹ và vành miệng loe thanh thoát
-    const points = (lathePoints && Array.isArray(lathePoints) && lathePoints.length >= 10)
-      ? lathePoints.map((p) => new THREE.Vector2(p.x, p.y))
-      : [
-          new THREE.Vector2(0, -0.75),        // Tâm chân đế tiếp xúc mặt bàn
-          new THREE.Vector2(0.55, -0.75),     // Chân đế mộc tiếp đất
-          new THREE.Vector2(0.70, -0.68),     // Đáy bo tròn nở lên
-          new THREE.Vector2(0.85, -0.55),     // Bụng dưới bắt đầu phình
-          new THREE.Vector2(0.98, -0.35),     // Thân dưới nở tròn
-          new THREE.Vector2(1.04, -0.10),     // Bụng phình rộng nhất
-          new THREE.Vector2(1.04, 0.10),      // Bụng phình
-          new THREE.Vector2(0.99, 0.30),      // Thân trên thon dần
-          new THREE.Vector2(0.94, 0.50),      // Cổ thắt nhẹ
-          new THREE.Vector2(0.98, 0.65),      // Miệng bắt đầu loe
-          new THREE.Vector2(1.02, 0.72),      // Đỉnh vành miệng loe thanh thoát
-          new THREE.Vector2(0.97, 0.74),      // Mép vành miệng bo tròn mịn
-          new THREE.Vector2(0.90, 0.70),      // Vách trong vành miệng
-          new THREE.Vector2(0.85, 0.50),      // Lòng trên
-          new THREE.Vector2(0.88, 0.15),      // Lòng giữa khoét theo bụng
-          new THREE.Vector2(0.85, -0.20),     // Lòng dưới
-          new THREE.Vector2(0.68, -0.50),     // Đáy trong
-          new THREE.Vector2(0.40, -0.62),     // Lòng sát đáy
-          new THREE.Vector2(0, -0.64),        // Tâm đáy lòng trong
-        ];
-    const geo = new THREE.LatheGeometry(points, 64);
-    geo.rotateY(Math.PI);
-    return geo;
-  }
-
   if (lathePoints && Array.isArray(lathePoints) && lathePoints.length >= 4) {
     // Tính toán bounding box thực tế của lathePoints
     let minY = Infinity, maxY = -Infinity, maxX = 0;
@@ -203,6 +172,55 @@ export function createCeramicGeometry(modelType = 'bowl', lathePoints = null, cu
   geo.rotateY(Math.PI);
   return geo;
 }
+/**
+ * Tạo quai cầm 3D dáng chữ C kết nối tự động và mượt mà vào thân cốc/ly/tách:
+ * - Tự động nội suy bán kính ngoài tại điểm tiếp xúc trên (yTop) và dưới (yBottom)
+ * - Ăn sâu nhẹ vào thành gốm để đảm bảo không bị hở khe hoặc bay lơ lửng ngoài không gian
+ */
+export function createMugHandleGeometry(modelType, profile = null) {
+  if (modelType !== 'mug') return null;
+
+  let rTop = 0.94;
+  let rBottom = 0.85;
+  let yTop = 0.50;
+  let yBottom = -0.45;
+
+  if (profile && Array.isArray(profile) && profile.length >= 4) {
+    const pts = profile.map((p) => ({
+      y: p.y !== undefined ? p.y : 0,
+      r: p.r !== undefined ? p.r : (p.x !== undefined ? p.x : 0),
+    }));
+    const minY = Math.min(...pts.map((p) => p.y));
+    const maxY = Math.max(...pts.map((p) => p.y));
+    const spanY = Math.max(0.2, maxY - minY);
+
+    yTop = maxY - spanY * 0.18;
+    yBottom = minY + spanY * 0.22;
+
+    const sorted = [...pts].sort((a, b) => a.y - b.y);
+    const interpR = (targetY) => {
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (sorted[i].y <= targetY && sorted[i + 1].y >= targetY) {
+          const frac = (targetY - sorted[i].y) / Math.max(0.001, sorted[i + 1].y - sorted[i].y);
+          return sorted[i].r + frac * (sorted[i + 1].r - sorted[i].r);
+        }
+      }
+      return sorted[sorted.length - 1].r;
+    };
+    rTop = interpR(yTop);
+    rBottom = interpR(yBottom);
+  }
+
+  // Đầu cắm ăn sâu vào thành phôi 0.04 đơn vị để nối liền mộc tự nhiên
+  const p0 = new THREE.Vector3(rTop - 0.04, yTop, 0);
+  const p1 = new THREE.Vector3(rTop + 0.72, yTop - 0.05, 0);
+  const p2 = new THREE.Vector3(rBottom + 0.78, yBottom + 0.22, 0);
+  const p3 = new THREE.Vector3(rBottom - 0.04, yBottom, 0);
+
+  const curve = new THREE.CubicBezierCurve3(p0, p1, p2, p3);
+  const handleRadius = Math.max(0.08, Math.min(0.12, (rTop + rBottom) * 0.065));
+  return new THREE.TubeGeometry(curve, 36, handleRadius, 16, false);
+}
 
 /**
  * Render 6 góc nhìn trực giao siêu nét:
@@ -274,13 +292,7 @@ export function generateOrthographicViews(
   // Đối với cốc (mug): thêm quai cầm 3D dáng chữ C chuẩn tỷ lệ 1:1 theo tiêu bản
   let handleMesh = null;
   if (modelType === 'mug') {
-    const curve = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(0.94, 0.55, 0),
-      new THREE.Vector3(1.68, 0.45, 0),
-      new THREE.Vector3(1.62, -0.15, 0),
-      new THREE.Vector3(0.88, -0.42, 0)
-    );
-    const handleGeo = new THREE.TubeGeometry(curve, 32, 0.11, 16, false);
+    const handleGeo = createMugHandleGeometry(modelType, lathePoints);
     const handleCanvas = createCeramicTextureCanvas({
       glazeColor,
       glazeName,

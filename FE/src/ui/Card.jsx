@@ -76,7 +76,7 @@ export function ProductCard({ product, index, onSelect }) {
 
   const { addItem } = useCart();
   const { showToast } = useToast();
-  const { setSelectedProduct, setModelType, selectProductForDesign } = useDesign();
+  const { setSelectedProduct, setModelType } = useDesign();
   const { setActiveTab } = useNavigation();
 
   const displayPrice = product.formattedPrice || (product.price ? product.price.toLocaleString('vi-VN') + ' ₫' : 'Liên hệ');
@@ -101,9 +101,10 @@ export function ProductCard({ product, index, onSelect }) {
 
   const handleAddToSchedule = (e) => {
     e?.stopPropagation();
-    // Set the product in design context so ScheduleScreen picks it up
+    // Set only the selected product for ScheduleScreen — đây là luồng ĐẶT LỊCH,
+    // KHÔNG gọi selectProductForDesign (đường dẫn 3D-design/AI) vì role của
+    // màn hình này không cần reset hoa văn, chữ khắc, lathePoints, glaze...
     if (setSelectedProduct) setSelectedProduct(product);
-    if (selectProductForDesign) selectProductForDesign(product);
     if (setModelType) setModelType(product.type || product.modelType || 'vase');
     // Navigate to schedule tab
     if (setActiveTab) setActiveTab('schedule');

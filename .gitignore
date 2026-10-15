@@ -361,3 +361,8 @@ backup/
 # Test data
 test_data/
 mock_data/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/

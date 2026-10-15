@@ -4,6 +4,7 @@ import { PATTERNS } from '../data/patterns';
 import { MODEL_LABELS } from '../data/products';
 import { imageCache, makeImageTransparent } from '../utils/ceramicTextureGenerator';
 import { generateOrthographicViews } from '../utils/orthographicRenderer';
+import { extractSilhouetteMaskFromCanvas, extractSymmetricLatheProfileFromMask } from '../utils/meshInflator';
 import { useDesign } from '../contexts/DesignContext';
 import { useCart } from '../contexts/CartContext';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -145,64 +146,28 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        // Trích xuất biên dạng đường bao đối xứng tròn xoay thông minh
+        // Trích xuất biên dạng đường bao đối xứng tròn xoay thông minh từ ảnh thật
         const canvas = document.createElement('canvas');
-        canvas.width = 160;
-        canvas.height = 160;
+        canvas.width = 256;
+        canvas.height = 256;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 160, 160);
-        ctx.drawImage(img, 0, 0, 160, 160);
-        const data = ctx.getImageData(0, 0, 160, 160).data;
+        ctx.drawImage(img, 0, 0, 256, 256);
+        const maskData = extractSilhouetteMaskFromCanvas(canvas);
 
-        let minX = 160, maxX = 0, minY = 160, maxY = 0;
-        for (let y = 0; y < 160; y++) {
-          for (let x = 0; x < 160; x++) {
-            const idx = (y * 160 + x) * 4;
-            const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
-            const isWhiteOrBg = (r > 232 && g > 232 && b > 232) || a < 35;
-            if (!isWhiteOrBg) {
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
-            }
-          }
+        let pts = null;
+        if (!maskData.isEmpty) {
+          pts = extractSymmetricLatheProfileFromMask(
+            maskData.mask,
+            maskData.w,
+            maskData.h,
+            maskData.bbox
+          );
         }
 
-        const midX = Math.round((minX + maxX) / 2) || 80;
-        const spanY = Math.max(25, maxY - minY);
-        const maxRadiusPx = Math.max(16, (maxX - minX) / 2) || 40;
-
-        const pts = [];
-        pts.push({ x: 0, y: -0.75 }); // Tâm chân đế tiếp xúc đất
-
-        const numSteps = 10;
-        for (let i = 0; i <= numSteps; i++) {
-          const sy = Math.round(maxY - (i / numSteps) * spanY);
-          let edgeX = midX + 18;
-          for (let x = 159; x >= midX; x--) {
-            const idx = (sy * 160 + x) * 4;
-            const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
-            const isWhiteOrBg = (r > 232 && g > 232 && b > 232) || a < 35;
-            if (!isWhiteOrBg) {
-              edgeX = x;
-              break;
-            }
-          }
-
-          const rawR = (edgeX - midX) / maxRadiusPx;
-          const normR = Math.max(0.36, Math.min(1.48, rawR * 1.08));
-          const normY = -0.75 + (i / numSteps) * 1.48;
-          pts.push({ x: Number(normR.toFixed(2)), y: Number(normY.toFixed(2)) });
+        if (!pts || pts.length < 8) {
+          showToast('Ảnh không rõ đường viền dáng gốm, vui lòng dùng ảnh có nền sáng hoặc rõ nét hơn!', 'error');
+          return;
         }
-
-        // Tạo vách lòng trong và đáy khoét rỗng chuẩn phôi gốm
-        const topRim = pts[pts.length - 1];
-        pts.push({ x: Math.max(0.24, Number((topRim.x - 0.12).toFixed(2))), y: topRim.y });
-        pts.push({ x: Math.max(0.20, Number((topRim.x - 0.22).toFixed(2))), y: Number((topRim.y - 0.32).toFixed(2)) });
-        pts.push({ x: 0.18, y: -0.50 });
-        pts.push({ x: 0, y: -0.58 }); // Đáy lòng trong
 
         const shapeName = file.name.replace(/\.[^/.]+$/, '').slice(0, 18) || 'Dáng Tự Chọn';
         addCustomShape({
@@ -210,7 +175,7 @@ export default function RightSidebar({ onClose, onGetSnapshot }) {
           lathePoints: pts,
           base3DType: 'bowl',
         });
-        showToast(`Đã áp dụng dáng phôi 3D mới "${shapeName}" từ ảnh!`, 'success');
+        showToast(`Đã tạo thành công dáng phôi 3D "${shapeName}" từ ảnh!`, 'success');
       };
       img.onerror = () => {
         showToast('Không thể đọc file ảnh dáng, vui lòng chọn file khác!', 'error');

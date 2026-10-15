@@ -270,6 +270,8 @@ export function inflateImageToCeramicGeometry(imageSource, options = {}) {
   return geometry;
 }
 
+export const inflateSilhouetteToMesh = inflateImageToCeramicGeometry;
+
 /**
  * Trích xuất đường cong tiết diện đối xứng chuẩn xác từ ảnh (Symmetric Half-Profile)
  * Khắc phục hoàn toàn lỗi quai cầm hoặc bóng đổ làm méo phôi khi dùng Bàn Xoay.

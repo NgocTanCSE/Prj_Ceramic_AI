@@ -8,58 +8,8 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import Button from '../ui/Button';
 import { createCeramicTextureCanvas, imageCache } from '../utils/ceramicTextureGenerator';
-import { createCeramicGeometry } from '../utils/orthographicRenderer';
-
-/* ──────────────────────────────────────────────────────────
-   StudioScreen - Bàn Xoay Tạo Hình 3D & Phối Men Nghệ Thuật
-   ── Code trực tiếp WebGL Three.js vào StudioScreen (decoupled)
-   ── Không dùng thanh pill bar lơ lửng, điều khiển qua thanh công cụ
-   ── Hỗ trợ xoay 360°, đổi phôi gốm, phủ men, dán hoa văn & khắc chữ
-   ────────────────────────────────────────────────────────── */
-
-// Helper tạo bóng đổ mềm dưới đáy bình gốm
-function createRadialShadowCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 120);
-  gradient.addColorStop(0, 'rgba(35, 25, 20, 0.35)');
-  gradient.addColorStop(0.3, 'rgba(40, 30, 25, 0.20)');
-  gradient.addColorStop(0.7, 'rgba(45, 35, 30, 0.07)');
-  gradient.addColorStop(1, 'rgba(50, 40, 35, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 256, 256);
-  return canvas;
-}
-
-// Helper tạo bóng tiếp xúc chân đế mộc
-function createContactShadowCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 60);
-  gradient.addColorStop(0, 'rgba(20, 15, 10, 0.75)');
-  gradient.addColorStop(0.4, 'rgba(25, 20, 15, 0.40)');
-  gradient.addColorStop(0.8, 'rgba(30, 25, 20, 0.08)');
-  gradient.addColorStop(1, 'rgba(30, 25, 20, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 128, 128);
-  return canvas;
-}
-
-// Helper tạo quai cầm dáng chữ C cho cốc gốm
-function createMugHandleGeometry(modelType) {
-  if (modelType !== 'mug') return null;
-  const curve = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(0.88, 0.50, 0),
-    new THREE.Vector3(1.72, 0.38, 0),
-    new THREE.Vector3(1.68, -0.22, 0),
-    new THREE.Vector3(0.78, -0.48, 0)
-  );
-  return new THREE.TubeGeometry(curve, 32, 0.11, 16, false);
-}
+import { createCeramicGeometry, createMugHandleGeometry } from '../utils/orthographicRenderer';
+import { createRadialShadowCanvas, createContactShadowCanvas } from '../utils/shadowCanvas';
 
 export default function StudioScreen() {
   const [showRightSidebar, setShowRightSidebar] = useState(true);
@@ -171,6 +121,7 @@ export default function StudioScreen() {
       modelType,
       width: 1024,
       height: 1024,
+      latheProfile: customLathePoints,
       onImageLoaded: () => {
         if (textureMapRef.current) {
           updateTextureFast(currentPatTransform, currentTxtTransform);
@@ -189,7 +140,7 @@ export default function StudioScreen() {
     }
 
     return textureMapRef.current;
-  }, [glazeColor, glazeName, modelType]);
+  }, [glazeColor, glazeName, modelType, customLathePoints]);
 
   // ── 2. Khởi tạo Three.js WebGL Scene & Viewport ──
   useEffect(() => {
@@ -648,7 +599,7 @@ export default function StudioScreen() {
     });
 
     const mainGeometry = createCeramicGeometry(modelType, customLathePoints);
-    const handleGeometry = createMugHandleGeometry(modelType);
+    const handleGeometry = createMugHandleGeometry(modelType, customLathePoints);
 
     // Căn chuẩn đáy phôi tiếp đất vững vàng tại Y = -1.0
     mainGeometry.computeBoundingBox();
