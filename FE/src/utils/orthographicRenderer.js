@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createCeramicTexture } from './ceramicTextureGenerator.js';
+import { createCeramicTexture, createCeramicTextureCanvas } from './ceramicTextureGenerator.js';
 
 /**
  * Tạo mô hình hình học Three.js chuẩn mực cho từng dáng gốm:

@@ -60,7 +60,7 @@ export default defineConfig({
     // Dedicated port avoids clashing with a production build on :3000.
     command: `npm run dev -- --port ${PORT} --strictPort`,
     url: BASE_URL,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120_000,
     stdout: 'ignore',
     stderr: 'pipe',

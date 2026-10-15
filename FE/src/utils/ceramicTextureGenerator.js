@@ -763,6 +763,37 @@ export function drawTextMotif(ctx, pl) {
 }
 
 /**
+ * Đo bounding-box thực tế của nét vẽ (pixels có alpha > ngưỡng) trên canvas.
+ * Dùng để suy ra footprint chính xác cho DecalGeometry từ nội dung vẽ thật
+ * thay vì ước lượng cố định — tránh méo tỉ lệ, mép đen thừa và cắt cụt.
+ * @returns {{x,y,w,h}|null}
+ */
+export function measureInkBBox(canvas, alphaThreshold = 10) {
+  try {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    if (!w || !h) return null;
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let minX = w, maxX = -1, minY = h, maxY = -1;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (data[(y * w + x) * 4 + 3] > alphaThreshold) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return null; // canvas rỗng
+    return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
  * Tạo danh sách decal canvas (nền trong suốt) chứa duy nhất họa tiết + chữ.
  * Mỗi phần tử: { canvas, kind, cx, cy, scale, tilt, footprintW, footprintH }.
  * Dùng kèm DecalGeometry thay vì cylindrical UV wrapping.
@@ -771,6 +802,9 @@ export function createDecalCanvases(opts) {
   const pl = computePatternPlacement(opts);
   const decals = [];
   const decalSize = 512;
+  // footprintf trả cho computeDecalPlacement phải ở KHÔNG GIAN TEXTURE
+  // (texW/texH, thường 1024×1024), trong khi dw/dh vẽ trên decal canvas 512.
+  const texScale = (opts.width || 1024) / decalSize;
 
   // (A) ảnh họa tiết người dùng tải lên
   if (pl.patternImage) {
@@ -806,8 +840,8 @@ export function createDecalCanvases(opts) {
           cy: pl.cy,
           scale: pl.pScale,
           tilt: pl.pTilt,
-          footprintW: dw,
-          footprintH: dh,
+          footprintW: dw * texScale,
+          footprintH: dh * texScale,
           rotationAngle: pl.pRotAngle,
         });
       } else if (img && opts.onImageLoaded) {
@@ -820,7 +854,18 @@ export function createDecalCanvases(opts) {
     canvas.width = decalSize; canvas.height = decalSize;
     const ctx = canvas.getContext('2d');
     drawPatternMotif(ctx, { ...pl, cx: decalSize / 2, cy: decalSize / 2, width: decalSize, height: decalSize }, opts.onImageLoaded);
-    const footprint = 280 * pl.pScale;
+    // FIX: Đo footprint THỰC TẾ từ alpha bbox của nét vẽ thay vì hardcode 280×280.
+    // Mỗi motif vector có kích thước khác nhau (hoa_dao 411×186, sen_co 172×247,
+    // dong_son 352×352...). Footprint sai → AR sai → decal méo; thừa → mép đen
+    // bao quanh; thiếu → bị cắt cụt khi DecalGeometry chiếu lên mặt cong.
+    // Lưu ý: bbox đo trên decal canvas 512px, phải quy đổi về không gian
+    // texture (opts.width, thường 1024) trước khi trả cho computeDecalPlacement.
+    // (texScale đã được khai báo ở đầu hàm — dùng chung với nhánh ảnh/chữ.)
+    const real = measureInkBBox(canvas, 10);
+    const margin = Math.ceil((14 * (opts.width || 1024)) / decalSize); // viền anti-alias
+    const footprint = real
+      ? { w: (real.w + margin * 2) * texScale, h: (real.h + margin * 2) * texScale }
+      : { w: 280, h: 280 };
     decals.push({
       canvas,
       kind: 'patternVector',
@@ -829,8 +874,8 @@ export function createDecalCanvases(opts) {
       cy: pl.cy,
       scale: pl.pScale,
       tilt: pl.pTilt,
-      footprintW: footprint,
-      footprintH: footprint,
+      footprintW: footprint.w,
+      footprintH: footprint.h,
       rotationAngle: pl.pRotAngle,
     });
   }
@@ -841,8 +886,11 @@ export function createDecalCanvases(opts) {
     canvas.width = decalSize; canvas.height = decalSize;
     const ctx = canvas.getContext('2d');
     drawTextMotif(ctx, { ...pl, textCx: decalSize / 2, textCy: decalSize / 2, width: decalSize, height: decalSize });
-    const tw = pl.norm ? pl.norm.textWidth : 200;
-    const th = ((pl.norm ? pl.norm.lines.length : 1) * pl.lineHeight);
+    // FIX: tw/th vẽ trên decal canvas 512 → phải quy đổi về không gian texture
+    // (×texScale) trước khi trả cho computeDecalPlacement, kẻo decal chữ hiện
+    // nhỏ bằng một nửa và sai vị trí trên mặt cong.
+    const tw = (pl.norm ? pl.norm.textWidth : 200) * texScale;
+    const th = ((pl.norm ? pl.norm.lines.length : 1) * pl.lineHeight) * texScale;
     decals.push({
       canvas,
       kind: 'text',
@@ -850,8 +898,8 @@ export function createDecalCanvases(opts) {
       cy: pl.textCy,
       scale: 1,
       tilt: 0,
-      footprintW: (tw || 200) + 40,
-      footprintH: th || pl.fontSize,
+      footprintW: (tw || 200 * texScale) + 40 * texScale,
+      footprintH: th || pl.fontSize * texScale,
       rotationAngle: 0,
     });
   }
