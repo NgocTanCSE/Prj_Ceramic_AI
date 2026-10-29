@@ -113,9 +113,10 @@ export default function HomeScreen() {
               {/* Hình ảnh tác phẩm */}
               <div className="relative aspect-[8/9] bg-ceramic-cream overflow-hidden">
                 <img
-                  src="https://cdnmedia.baotintuc.vn/Upload/rGkvwNpj74Z1EcpzQ6ltA/files/2024/06/tuan1/gom-3624(1).jpg"
-                  alt="Bình gốm khắc chìm hoa cúc dây Biên Hòa"
+                  src="/assets/homepage/hero-ceramic-vase.jpg"
+                  alt="Bình gốm men xanh đồng khắc chìm hoa cúc dây Biên Hòa trong xưởng gốm Tân Vạn"
                   className="w-full h-full object-cover object-center"
+                  loading="eager"
                 />
               </div>
             </div>
@@ -254,9 +255,10 @@ export default function HomeScreen() {
           <div className="bg-ceramic-paper border border-ceramic-border rounded-2xl overflow-hidden flex flex-col group hover:shadow-card transition-shadow scroll-reveal delay-100">
             <div className="relative aspect-[4/3] bg-ceramic-cream overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=600&q=80"
-                alt="Đôn voi gốm men xanh đồng Biên Hòa"
+                src="/assets/homepage/don-voi-men-xanh.jpg"
+                alt="Đôn voi gốm men xanh đồng Biên Hòa khắc hoa cúc dây champlevé"
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+                loading="lazy"
               />
               <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-ceramic-charcoal/80 text-ceramic-paper text-[10px] font-mono">
                 PARIS 1925
@@ -293,9 +295,10 @@ export default function HomeScreen() {
           <div className="bg-ceramic-paper border border-ceramic-border rounded-2xl overflow-hidden flex flex-col group hover:shadow-card transition-shadow scroll-reveal delay-200">
             <div className="relative aspect-[4/3] bg-ceramic-cream overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=600&q=80"
-                alt="Bình hoa cúc dây chạm lộng"
+                src="/assets/homepage/binh-hoa-cuc-day.jpg"
+                alt="Bình hoa cúc dây chạm lộng men Vert de Biên Hòa kết hợp men vàng hoàng yến"
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+                loading="lazy"
               />
               <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-ceramic-charcoal/80 text-ceramic-paper text-[10px] font-mono">
                 CHAMPLEVÉ
@@ -332,9 +335,10 @@ export default function HomeScreen() {
           <div className="bg-ceramic-paper border border-ceramic-border rounded-2xl overflow-hidden flex flex-col group hover:shadow-card transition-shadow scroll-reveal delay-300">
             <div className="relative aspect-[4/3] bg-ceramic-cream overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=600&q=80"
-                alt="Bát trà men đá đỏ Bửu Long"
+                src="/assets/homepage/bat-tra-da-do.jpg"
+                alt="Bát trà men đá đỏ Bửu Long nung củi lò rồng"
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+                loading="lazy"
               />
               <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-ceramic-charcoal/80 text-ceramic-paper text-[10px] font-mono">
                 GỐM MỘC NAM BỘ
